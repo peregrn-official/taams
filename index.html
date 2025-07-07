@@ -29,14 +29,16 @@
 
     <section id="assistant">
       <h2 data-i18n="talk">💬 Parle à Taams</h2>
-      <input type="text" id="userInput" placeholder="Dis quelque chose..." />
-      <button onclick="talkToTaams()">Envoyer</button>
-      <button onclick="startListening()">🎙️</button>
-      <p id="taamsReply">Taams t’écoute 👂</p>
+      <iframe
+        src="https://taams-deepseek.hf.space"
+        width="100%"
+        height="600"
+        style="border:none; border-radius:12px; box-shadow:0 0 15px rgba(0,0,0,0.1);"
+        title="Taams - Assistant IA">
+      </iframe>
     </section>
   </main>
 
-  <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
