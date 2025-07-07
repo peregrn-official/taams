@@ -1,57 +1,60 @@
-// Langues
-const translations = {
-  fr: {
-    timeWeather: "🕐 Heure & 🌤️ Météo",
-    news: "🗞️ Actualité",
-    talk: "💬 Parle à Taams"
-  },
-  en: {
-    timeWeather: "🕐 Time & 🌤️ Weather",
-    news: "🗞️ News",
-    talk: "💬 Talk to Taams"
-  }
-};
-
-document.getElementById("langSwitch").addEventListener("change", (e) => {
-  const lang = e.target.value;
-  document.querySelectorAll("[data-i18n]").forEach(el => {
-    el.textContent = translations[lang][el.dataset.i18n];
-  });
-});
-
-// Heure
+// 🕰️ Heure locale en temps réel
 setInterval(() => {
   const now = new Date();
-  document.getElementById("clock").textContent = now.toLocaleTimeString();
+  const time = now.toLocaleTimeString("fr-FR", {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+  document.getElementById("clock").textContent = `Il est ${time} ⏳`;
 }, 1000);
 
-// Météo
-fetch(`https://api.openweathermap.org/data/2.5/weather?q=Paris&units=metric&lang=fr&appid=${config.weatherApiKey}`)
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById("weather").textContent =
-      `${data.weather[0].description} – ${data.main.temp}°C à Paris`;
-  });
+// 🌤️ Météo factice mais crédible
+const fakeWeather = [
+  "☁️ Ciel voilé – 22°C à Paris",
+  "🌤️ Éclaircies avec vent léger – 24°C",
+  "🌧️ Pluie fine – 19°C, prends un parapluie !",
+  "☀️ Ensoleillé et doux – 23°C",
+  "⛅ Temps variable avec nuages dispersés – 21°C"
+];
+document.getElementById("weather").textContent =
+  fakeWeather[Math.floor(Math.random() * fakeWeather.length)];
 
-// Actu
-fetch(`https://newsapi.org/v2/top-headlines?country=fr&apiKey=${config.newsApiKey}`)
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById("headline").textContent = data.articles[0].title;
-  });
+// 📰 Actu simulée dynamique
+const fakeHeadlines = [
+  "📣 La crypto Pi franchit les 50 millions d’utilisateurs !",
+  "🚀 Un nouveau record pour le réseau décentralisé Taams !",
+  "🌍 Journée mondiale de l’innovation communautaire célébrée dans 58 pays.",
+  "🤖 L’IA de compagnie fait son entrée dans les écoles françaises.",
+  "🪐 Découverte : la planète PiX-42 aurait des conditions habitables."
+];
+document.getElementById("headline").textContent =
+  fakeHeadlines[Math.floor(Math.random() * fakeHeadlines.length)];
 
-// Assistant IA simple
+// 🧠 Assistant IA local – mots-clés et réponses
 function talkToTaams() {
   const input = document.getElementById("userInput").value.toLowerCase();
-  let reply = "🤖 Je réfléchis...";
-  if (input.includes("météo")) reply = "🌦️ Il fait doux aujourd’hui à Paris.";
-  else if (input.includes("heure")) reply = "🕐 Il est " + new Date().toLocaleTimeString();
-  else if (input.includes("salut")) reply = "👋 Salut ! Je suis Taams, ton assistant du futur.";
+  let reply = "🤔 Je n’ai pas compris, mais je suis toujours là avec toi.";
+
+  if (input.includes("salut") || input.includes("bonjour")) {
+    reply = "👋 Salut explorateur temporel ! Prêt pour une nouvelle aventure ?";
+  } else if (input.includes("météo")) {
+    reply = "🌦️ Aujourd’hui, il fait doux avec des probabilités de code !";
+  } else if (input.includes("heure")) {
+    reply = "⏰ Je te l’affiche juste au-dessus, voyageur du présent.";
+  } else if (input.includes("actu") || input.includes("actualité")) {
+    reply = "🗞️ Les titres les plus chauds sont juste là 👆. Spoiler : ça bouge.";
+  } else if (input.includes("mot")) {
+    reply = "💡 Mot du jour : *Émergence* — ce qui naît quand on combine les bonnes choses.";
+  } else if (input.includes("conseil")) {
+    reply = "🔮 Conseil Taams du jour : Reste curieux, même quand les réponses sont floues.";
+  }
+
   document.getElementById("taamsReply").textContent = reply;
   speak(reply);
 }
 
-// Voix
+// 🎙️ Synthèse vocale (voix Taams)
 function speak(text) {
   const synth = window.speechSynthesis;
   const utter = new SpeechSynthesisUtterance(text);
@@ -59,13 +62,14 @@ function speak(text) {
   synth.speak(utter);
 }
 
-// Micro
+// 🎤 Reconnaissance vocale (Chrome uniquement)
 function startListening() {
-  const rec = new webkitSpeechRecognition() || new SpeechRecognition();
+  const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   rec.lang = "fr-FR";
   rec.start();
   rec.onresult = (e) => {
-    document.getElementById("userInput").value = e.results[0][0].transcript;
+    const transcript = e.results[0][0].transcript;
+    document.getElementById("userInput").value = transcript;
     talkToTaams();
   };
 }
