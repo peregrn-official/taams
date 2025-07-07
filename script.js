@@ -31,6 +31,14 @@ const fakeHeadlines = [
 document.getElementById("headline").textContent =
   fakeHeadlines[Math.floor(Math.random() * fakeHeadlines.length)];
 
+// Permet d’envoyer le message avec la touche Entrée
+document.getElementById("userInput").addEventListener("keypress", function (e) {
+  if (e.key === "Enter") {
+    e.preventDefault(); // évite le retour à la ligne
+    talkToTaams();
+  }
+});
+
 // 🧠 Assistant IA local – mots-clés et réponses
 function talkToTaams() {
   const input = document.getElementById("userInput").value.toLowerCase();
