@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Taams – Assistant Futuriste</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <img src="assets/logo.svg" alt="Taams Logo" class="logo" />
+    <select id="langSwitch">
+      <option value="fr">🇫🇷 Français</option>
+      <option value="en">🇬🇧 English</option>
+    </select>
+  </header>
+
+  <main>
+    <section id="time-weather">
+      <h2 data-i18n="timeWeather">🕐 Heure & 🌤️ Météo</h2>
+      <p id="clock">...</p>
+      <p id="weather">...</p>
+    </section>
+
+    <section id="news">
+      <h2 data-i18n="news">🗞️ Actualité</h2>
+      <p id="headline">...</p>
+    </section>
+
+    <section id="assistant">
+      <h2 data-i18n="talk">💬 Parle à Taams</h2>
+      <input type="text" id="userInput" placeholder="Dis quelque chose..." />
+      <button onclick="talkToTaams()">Envoyer</button>
+      <button onclick="startListening()">🎙️</button>
+      <p id="taamsReply">Taams t’écoute 👂</p>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
