@@ -30,3 +30,10 @@ const fakeHeadlines = [
 ];
 document.getElementById("headline").textContent =
   fakeHeadlines[Math.floor(Math.random() * fakeHeadlines.length)];
+// 🔄 Ouvrir / fermer la fenêtre Taams
+document.getElementById("taamsToggle").addEventListener("click", () => {
+  document.getElementById("taamsContainer").style.display = "block";
+});
+document.getElementById("taamsClose").addEventListener("click", () => {
+  document.getElementById("taamsContainer").style.display = "none";
+});
