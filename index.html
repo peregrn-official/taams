@@ -27,33 +27,167 @@
   <div class="container py-4">
     <div class="d-flex justify-content-between mb-4 align-items-center">
       <h1>TAAMS DApp</h1>
-      <!-- À placer dans index.html après la balise <h1> -->
-<div class="roadmap-banner mt-4 mb-5">
-  <h2 class="text-center mb-4">🚀 Roadmap TAAMS</h2>
-  <div class="timeline">
-    <div class="timeline-item completed">
-      <div class="timeline-point">1</div>
-      <div class="timeline-content">
-        <h5>Phase 1 - Lancement</h5>
-        <p>Déploiement des contrats<br>Staking basique</p>
+      <!-- À placer dans index.html avant la section principale -->
+<section class="roadmap-section py-4">
+  <div class="container">
+    <h2 class="text-center mb-5"><i class="fas fa-map-marked-alt me-2"></i>Feuille de Route TAAMS</h2>
+    
+    <div class="roadmap-steps">
+      <!-- Étape 1 -->
+      <div class="step completed">
+        <div class="step-icon"><i class="fas fa-rocket"></i></div>
+        <div class="step-content">
+          <h4>Q3 2023</h4>
+          <ul>
+            <li><i class="fas fa-check-circle"></i> Lancement du token</li>
+            <li><i class="fas fa-check-circle"></i> Staking V1</li>
+          </ul>
+        </div>
       </div>
-    </div>
-    <div class="timeline-item active">
-      <div class="timeline-point">2</div>
-      <div class="timeline-content">
-        <h5>Phase 2 - Croissance</h5>
-        <p>Badges NFT<br>Système de niveaux</p>
+
+      <!-- Étape 2 -->
+      <div class="step current">
+        <div class="step-icon"><i class="fas fa-layer-group"></i></div>
+        <div class="step-content">
+          <h4>Q4 2023</h4>
+          <ul>
+            <li><i class="fas fa-spinner"></i> Badges NFT</li>
+            <li><i class="fas fa-spinner"></i> Marketplace</li>
+          </ul>
+        </div>
       </div>
-    </div>
-    <div class="timeline-item">
-      <div class="timeline-point">3</div>
-      <div class="timeline-content">
-        <h5>Phase 3 - Expansion</h5>
-        <p>Marketplace<br>Intégration multi-chaîne</p>
+
+      <!-- Étape 3 -->
+      <div class="step">
+        <div class="step-icon"><i class="fas fa-expand"></i></div>
+        <div class="step-content">
+          <h4>Q1 2024</h4>
+          <ul>
+            <li><i class="far fa-circle"></i> Intégration Multi-Chaîne</li>
+            <li><i class="far fa-circle"></i> DAO Governance</li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
+</section>
+
+<style>
+.roadmap-section {
+  background: linear-gradient(135deg, rgba(110,72,170,0.2) 0%, rgba(157,80,187,0.3) 100%);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.roadmap-steps {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.roadmap-steps::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 60px;
+  height: 100%;
+  width: 3px;
+  background: linear-gradient(to bottom, #6e48aa, #9d50bb);
+}
+
+.step {
+  position: relative;
+  padding-left: 100px;
+  margin-bottom: 40px;
+}
+
+.step-icon {
+  position: absolute;
+  left: 30px;
+  top: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: #1a1a2e;
+  border: 3px solid #6e48aa;
+  color: #9d50bb;
+}
+
+.step.completed .step-icon {
+  background: #6e48aa;
+  color: white;
+  border-color: #9d50bb;
+}
+
+.step.current .step-icon {
+  animation: pulse 2s infinite;
+  background: #9d50bb;
+  color: white;
+  border-color: #6e48aa;
+}
+
+.step-content {
+  background: rgba(26, 26, 46, 0.8);
+  padding: 20px;
+  border-radius: 10px;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(110, 72, 170, 0.3);
+}
+
+.step-content h4 {
+  color: #9d50bb;
+  margin-top: 0;
+}
+
+.step-content ul {
+  padding-left: 20px;
+  color: rgba(255,255,255,0.8);
+}
+
+.step-content li {
+  margin-bottom: 8px;
+}
+
+.fa-check-circle {
+  color: #4CAF50;
+}
+
+.fa-spinner {
+  color: #FFC107;
+}
+
+.fa-circle {
+  color: rgba(255,255,255,0.3);
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(157, 80, 187, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(157, 80, 187, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(157, 80, 187, 0); }
+}
+
+@media (max-width: 768px) {
+  .roadmap-steps::before {
+    left: 30px;
+  }
+  .step {
+    padding-left: 70px;
+  }
+  .step-icon {
+    left: 0;
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+}
 </style>
+
+<!-- Ajouter Font Awesome en haut de votre HTML -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 <!-- CSS à ajouter dans le <style> existant -->
 <style>
