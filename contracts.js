@@ -1,23 +1,27 @@
-// Configuration des contrats
+// Network Configuration
+const NETWORK_CONFIG = {
+  chainId: 1, // Ethereum Mainnet
+  chainName: "Ethereum Mainnet",
+  nativeCurrency: {
+    name: "Ethereum",
+    symbol: "ETH",
+    decimals: 18
+  },
+  rpcUrls: ["https://mainnet.infura.io/v3/YOUR_INFURA_KEY"],
+  blockExplorerUrls: ["https://etherscan.io"],
+  iconUrls: ["https://etherscan.io/favicon.ico"]
+};
+
+// TAAMS Contract
 const CONTRACTS = {
   TAAMS: {
-    address: '0x123...', // Remplacez par votre adresse réelle
+    address: '0x123...', // Replace with actual contract address
     abi: [
       {
         "constant": true,
         "inputs": [{"name": "_owner", "type": "address"}],
         "name": "balanceOf",
         "outputs": [{"name": "balance", "type": "uint256"}],
-        "type": "function"
-      },
-      {
-        "constant": false,
-        "inputs": [
-          {"name": "_to", "type": "address"},
-          {"name": "_value", "type": "uint256"}
-        ],
-        "name": "transfer",
-        "outputs": [{"name": "success", "type": "bool"}],
         "type": "function"
       },
       {
@@ -64,7 +68,7 @@ const CONTRACTS = {
   }
 };
 
-// Détection d'environnement
+// Environment Detection
 const ENV = {
   isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
   isMetaMaskInstalled: () => window.ethereum && window.ethereum.isMetaMask,
@@ -76,42 +80,27 @@ const ENV = {
   }
 };
 
-// Configuration réseau
-const NETWORK_CONFIG = {
-  chainId: 1, // Ethereum Mainnet
-  chainName: "Ethereum Mainnet",
-  nativeCurrency: {
-    name: "Ethereum",
-    symbol: "ETH",
-    decimals: 18
-  },
-  rpcUrls: ["https://mainnet.infura.io/v3/YOUR_INFURA_KEY"],
-  blockExplorerUrls: ["https://etherscan.io"]
-};
-
-// Vérification du réseau
-async function checkNetwork() {
-  if (window.ethereum) {
-    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-    if (chainId !== `0x${NETWORK_CONFIG.chainId.toString(16)}`) {
-      try {
-        await window.ethereum.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: `0x${NETWORK_CONFIG.chainId.toString(16)}` }],
-        });
-      } catch (error) {
-        if (error.code === 4902) {
-          try {
-            await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [NETWORK_CONFIG],
-            });
-          } catch (addError) {
-            console.error("Erreur d'ajout de réseau:", addError);
-          }
+// Contract Events
+const CONTRACT_EVENTS = {
+  TAAMS: {
+    Staked: {
+      name: 'Staked',
+      handler: (event) => {
+        console.log('Staking event:', event);
+        // Update UI when staking event is detected
+        if (event.returnValues.user.toLowerCase() === state.account.toLowerCase()) {
+          loadData();
         }
-        console.error("Erreur de changement de réseau:", error);
       }
     }
+  }
+};
+
+// Initialize Contract Events
+function initContractEvents() {
+  if (state.contract) {
+    state.contract.events.Staked()
+      .on('data', CONTRACT_EVENTS.TAAMS.Staked.handler)
+      .on('error', console.error);
   }
 }
