@@ -55,3 +55,18 @@ const NETWORK_CONFIG = {
   rpcUrls: ["https://mainnet.infura.io/v3/YOUR_KEY"],
   blockExplorerUrls: ["https://etherscan.io"]
 };
+
+// Détection mobile améliorée
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+// Wallet detection
+function isMetaMaskInstalled() {
+  return Boolean(window.ethereum && window.ethereum.isMetaMask);
+}
+
+// Lien mobile MetaMask
+function getMetaMaskDeepLink() {
+  return `https://metamask.app.link/dapp/${window.location.hostname}${window.location.pathname}`;
+}

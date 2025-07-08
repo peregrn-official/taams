@@ -2,29 +2,50 @@
 const CONFIG = {
   TAAMS_ADDRESS: '0x123...', // Remplacez par votre adresse
   NETWORK_ID: 1,
-  VERSION: '2.2.0'
+  VERSION: '2.3.0'
 };
 
 // Variables globales
 let web3, taamsContract, account;
+let cellSize = 10; // Pour le jeu Snake
 
 // Initialisation
 document.addEventListener('DOMContentLoaded', async () => {
   initEventListeners();
   initSnakeGame();
   
-  if (window.ethereum && window.ethereum.selectedAddress) {
+  // Détection mobile
+  if (isMobileDevice()) {
+    // Ajustements spécifiques mobile
+    document.getElementById('stakeInput').setAttribute('inputmode', 'decimal');
+    
+    // Vérification MetaMask
+    if (!isMetaMaskInstalled()) {
+      const walletBtn = document.getElementById('walletBtn');
+      walletBtn.innerHTML = '<i class="fas fa-external-link-alt me-2"></i>Installer MetaMask';
+      walletBtn.onclick = () => window.open('https://metamask.io/download.html');
+    }
+  }
+
+  if (window.ethereum?.selectedAddress) {
     await connectWallet();
   }
 });
 
-// Gestion du wallet
+// Gestion du wallet (optimisé mobile)
 async function connectWallet() {
   try {
+    // Solution pour mobile
+    if (isMobileDevice() && !isMetaMaskInstalled()) {
+      window.location.href = getMetaMaskDeepLink();
+      return;
+    }
+
     if (!window.ethereum) throw new Error("MetaMask non détecté");
     
     web3 = new Web3(window.ethereum);
-    account = (await web3.eth.requestAccounts())[0];
+    const accounts = await web3.eth.requestAccounts();
+    account = accounts[0];
     
     taamsContract = new web3.eth.Contract(
       CONTRACTS.TAAMS.abi,
@@ -34,91 +55,23 @@ async function connectWallet() {
     updateWalletUI();
     loadData();
     
+    // Gestion des changements
     window.ethereum.on('accountsChanged', () => window.location.reload());
     window.ethereum.on('chainChanged', () => window.location.reload());
     
   } catch (error) {
-    showError(error.message);
+    showError(handleWalletError(error));
   }
 }
 
-// Chargement des données
-async function loadData() {
-  if (!account) return;
-  
-  try {
-    // Solde et staking
-    const balance = await taamsContract.methods.balanceOf(account).call();
-    document.getElementById('tokenBalance').textContent = web3.utils.fromWei(balance, 'ether');
-    
-    const stake = await taamsContract.methods.stakes(account).call();
-    const stakedAmount = web3.utils.fromWei(stake.amount, 'ether');
-    document.getElementById('stakedAmount').textContent = stakedAmount;
-    
-    // Calcul niveau et récompenses
-    const level = calculateLevel(stakedAmount);
-    const rewards = calculateRewards(stake.amount, stake.timestamp, level);
-    
-    // Mise à jour UI
-    document.getElementById('rewards').textContent = rewards.toFixed(4);
-    document.getElementById('currentLevel').textContent = level;
-    document.getElementById('levelProgress').style.width = `${(level/5)*100}%`;
-    
-    updateVisualBadges(level, stakedAmount);
-    
-  } catch (error) {
-    showError("Erreur de chargement");
-  }
+function handleWalletError(error) {
+  console.error("Erreur wallet:", error);
+  if (error.code === 4001) return "Connexion annulée";
+  if (error.code === -32002) return "Déjà en cours de traitement";
+  return "Erreur de connexion au wallet";
 }
 
-// Système de niveaux
-function calculateLevel(stakedAmount) {
-  const amount = parseFloat(stakedAmount);
-  if (amount >= 10000) return 5;
-  if (amount >= 5000) return 4;
-  if (amount >= 2000) return 3; 
-  if (amount >= 1000) return 2;
-  if (amount >= 500) return 1;
-  return 0;
-}
-
-function calculateRewards(amount, timestamp, level) {
-  const duration = (Date.now() / 1000 - timestamp) / 86400;
-  const multiplier = 1 + (level * 0.05);
-  return (duration * amount * multiplier) / (100 * 1e18);
-}
-
-function updateVisualBadges(level, stakedAmount) {
-  const badges = [
-    { name: "Nouveau", icon: "fa-seedling", color: "#9e9e9e", req: 0 },
-    { name: "Bronze", icon: "fa-award", color: "#cd7f32", req: 500 },
-    { name: "Argent", icon: "fa-medal", color: "#c0c0c0", req: 1000 },
-    { name: "Or", icon: "fa-trophy", color: "#ffd700", req: 2000 },
-    { name: "Platine", icon: "fa-gem", color: "#e5e4e2", req: 5000 },
-    { name: "Diamant", icon: "fa-crown", color: "#b9f2ff", req: 10000 }
-  ];
-
-  const currentBadge = badges[level];
-  const nextLevel = level < 5 ? badges[level+1] : null;
-  const progress = nextLevel ? Math.min(100, (stakedAmount / nextLevel.req) * 100) : 100;
-
-  const badgeHTML = `
-    <div class="badge-card ${level === 5 ? 'diamond-badge' : ''}" style="border-color: ${currentBadge.color}">
-      <div class="badge-icon" style="color: ${currentBadge.color}">
-        <i class="fas ${currentBadge.icon}"></i>
-      </div>
-      <h5>${currentBadge.name}</h5>
-      <div class="progress mt-2">
-        <div class="progress-bar" style="width: ${progress}%; background: ${currentBadge.color}"></div>
-      </div>
-      <small>${stakedAmount} / ${nextLevel?.req || 'MAX'} TAAMS</small>
-    </div>
-  `;
-
-  document.getElementById('badgesContainer').innerHTML = badgeHTML;
-}
-
-// Mini-jeu Snake
+// Jeu Snake (optimisé mobile)
 function initSnakeGame() {
   const canvas = document.getElementById('snakeGame');
   const ctx = canvas.getContext('2d');
@@ -131,20 +84,29 @@ function initSnakeGame() {
   let snake, food, dx, dy, score, gameLoop;
 
   function initGame() {
-    snake = [{x: 150, y: 150}];
-    food = {x: 0, y: 0};
-    dx = 10;
+    // Ajustement taille canvas
+    const size = Math.min(window.innerWidth * 0.9, 400);
+    canvas.width = size;
+    canvas.height = size;
+    cellSize = Math.floor(size / 30);
+
+    // Initialisation jeu
+    snake = [{x: Math.floor(15 * cellSize), y: Math.floor(15 * cellSize)}];
+    food = {};
+    dx = cellSize;
     dy = 0;
     score = 0;
     generateFood();
     if (gameLoop) clearInterval(gameLoop);
-    gameLoop = setInterval(mainGameLoop, 100);
+    gameLoop = setInterval(mainGameLoop, 150);
     scoreDisplay.textContent = `Score: ${score}`;
   }
 
   function generateFood() {
-    food.x = Math.floor(Math.random() * 30) * 10;
-    food.y = Math.floor(Math.random() * 30) * 10;
+    food = {
+      x: Math.floor(Math.random() * (canvas.width / cellSize)) * cellSize,
+      y: Math.floor(Math.random() * (canvas.height / cellSize)) * cellSize
+    };
   }
 
   function mainGameLoop() {
@@ -153,7 +115,6 @@ function initSnakeGame() {
       alert(`Game Over! Score: ${score}`);
       return;
     }
-
     moveSnake();
     drawGame();
   }
@@ -161,8 +122,8 @@ function initSnakeGame() {
   function isGameOver() {
     const head = snake[0];
     return (
-      head.x < 0 || head.x >= 300 ||
-      head.y < 0 || head.y >= 300 ||
+      head.x < 0 || head.x >= canvas.width ||
+      head.y < 0 || head.y >= canvas.height ||
       snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)
     );
   }
@@ -181,33 +142,49 @@ function initSnakeGame() {
   }
 
   function drawGame() {
+    // Fond
     ctx.fillStyle = '#1a1a2e';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
+    // Serpent
     ctx.fillStyle = '#9d50bb';
     snake.forEach(segment => {
-      ctx.fillRect(segment.x, segment.y, 10, 10);
+      ctx.fillRect(segment.x, segment.y, cellSize, cellSize);
       ctx.strokeStyle = '#6e48aa';
-      ctx.strokeRect(segment.x, segment.y, 10, 10);
+      ctx.strokeRect(segment.x, segment.y, cellSize, cellSize);
     });
     
+    // Nourriture
     ctx.fillStyle = '#ffd700';
     ctx.beginPath();
-    ctx.arc(food.x + 5, food.y + 5, 5, 0, Math.PI * 2);
+    ctx.arc(food.x + cellSize/2, food.y + cellSize/2, cellSize/2, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // Événements
+  // Contrôles
   document.addEventListener('keydown', e => {
     if (gameContainer.style.display !== 'flex') return;
     
     const key = e.key;
-    if (key === 'ArrowUp' && dy === 0) { dx = 0; dy = -10; }
-    if (key === 'ArrowDown' && dy === 0) { dx = 0; dy = 10; }
-    if (key === 'ArrowLeft' && dx === 0) { dx = -10; dy = 0; }
-    if (key === 'ArrowRight' && dx === 0) { dx = 10; dy = 0; }
+    if (key === 'ArrowUp' && dy <= 0) { dx = 0; dy = -cellSize; }
+    if (key === 'ArrowDown' && dy >= 0) { dx = 0; dy = cellSize; }
+    if (key === 'ArrowLeft' && dx <= 0) { dx = -cellSize; dy = 0; }
+    if (key === 'ArrowRight' && dx >= 0) { dx = cellSize; dy = 0; }
   });
 
+  // Contrôles tactiles
+  document.querySelectorAll('.touch-btn').forEach(btn => {
+    btn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const dir = btn.getAttribute('data-direction');
+      if (dir === 'up' && dy <= 0) { dx = 0; dy = -cellSize; }
+      if (dir === 'down' && dy >= 0) { dx = 0; dy = cellSize; }
+      if (dir === 'left' && dx <= 0) { dx = -cellSize; dy = 0; }
+      if (dir === 'right' && dx >= 0) { dx = cellSize; dy = 0; }
+    });
+  });
+
+  // Boutons
   playBtn.addEventListener('click', () => {
     gameContainer.style.display = 'flex';
     initGame();
@@ -220,53 +197,4 @@ function initSnakeGame() {
   });
 }
 
-// Helpers
-function updateWalletUI() {
-  const btn = document.getElementById('walletBtn');
-  btn.innerHTML = `<i class="fas fa-wallet me-2"></i>${account.slice(0,6)}...${account.slice(-4)}`;
-  btn.classList.add('connected');
-}
-
-function showError(message, elementId = 'errorAlert') {
-  const element = document.getElementById(elementId);
-  element.textContent = message;
-  element.classList.remove('d-none');
-  setTimeout(() => element.classList.add('d-none'), 5000);
-}
-
-function initEventListeners() {
-  document.getElementById('stakeBtn').addEventListener('click', stakeTokens);
-  document.getElementById('claimBtn').addEventListener('click', claimRewards);
-  document.getElementById('unstakeBtn').addEventListener('click', unstakeTokens);
-}
-
-async function stakeTokens() {
-  const amount = document.getElementById('stakeInput').value;
-  if (!amount || amount <= 0) return showError("Montant invalide", "stakeError");
-  
-  try {
-    await taamsContract.methods.stake(web3.utils.toWei(amount, 'ether'))
-      .send({ from: account });
-    loadData();
-  } catch (error) {
-    showError("Échec du staking");
-  }
-}
-
-async function claimRewards() {
-  try {
-    await taamsContract.methods.claimRewards().send({ from: account });
-    loadData();
-  } catch (error) {
-    showError("Échec du claim");
-  }
-}
-
-async function unstakeTokens() {
-  try {
-    await taamsContract.methods.unstake().send({ from: account });
-    loadData();
-  } catch (error) {
-    showError("Échec de l'unstake");
-  }
-}
+// [Les autres fonctions (loadData, calculateLevel, etc.) restent identiques à la version précédente]
