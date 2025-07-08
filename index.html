@@ -3,90 +3,199 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TAAMS DApp Demo</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <title>TAAMS - Plateforme de Staking</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary: #6e48aa;
       --secondary: #9d50bb;
-      --dark: #1a1a2e;
-      --light: #f1f1f1;
+      --dark: #0f0f1a;
+      --darker: #080811;
+      --light: #e0e0ff;
+      --neon: #00f0ff;
+      --neon-glow: 0 0 10px rgba(0, 240, 255, 0.7);
     }
+    
     body {
-      background: var(--dark);
-      color: white;
-      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, var(--darker), var(--dark));
+      color: var(--light);
+      font-family: 'Roboto', sans-serif;
+      min-height: 100vh;
     }
+    
+    h1, h2, h3 {
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: 1px;
+    }
+    
+    .neon-text {
+      color: var(--neon);
+      text-shadow: var(--neon-glow);
+    }
+    
     .glass-card {
-      background: rgba(0,0,0,0.2);
-      backdrop-filter: blur(5px);
-      border: 1px solid rgba(110,72,170,0.3);
+      background: rgba(15, 15, 26, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(110, 72, 170, 0.3);
       border-radius: 16px;
+      transition: all 0.3s;
     }
+    
+    .glass-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(110, 72, 170, 0.4);
+    }
+    
+    .badge-card {
+      width: 160px;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+    
+    .badge-card::before {
+      content: "";
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      z-index: -1;
+      border-radius: 18px;
+      background: linear-gradient(45deg, 
+        var(--primary), 
+        var(--secondary), 
+        var(--neon));
+      background-size: 200% 200%;
+      animation: gradient 3s ease infinite;
+    }
+    
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .badge-card.active {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px rgba(157, 80, 187, 0.7);
+    }
+    
+    .badge-icon {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+    }
+    
     #loadingScreen {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.8);
+      background: var(--darker);
       z-index: 9999;
       display: flex;
       justify-content: center;
       align-items: center;
     }
+    
+    .btn-neon {
+      background: transparent;
+      color: var(--neon);
+      border: 2px solid var(--neon);
+      font-weight: bold;
+      letter-spacing: 1px;
+      transition: all 0.3s;
+    }
+    
+    .btn-neon:hover {
+      background: rgba(0, 240, 255, 0.1);
+      box-shadow: var(--neon-glow);
+    }
   </style>
 </head>
 <body>
-  <div id="loadingScreen">
-    <div class="spinner-border text-primary"></div>
+  <div id="loadingScreen" class="neon-text">
+    <div>
+      <div class="spinner-border" style="color: var(--neon)"></div>
+      <h3 class="mt-3">Chargement TAAMS...</h3>
+    </div>
   </div>
 
   <div class="container py-4" id="appContent" style="display:none;">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h1><i class="fas fa-coins me-2"></i>TAAMS Demo</h1>
-      <button id="walletBtn" class="btn btn-primary">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+      <div>
+        <h1 class="neon-text mb-0">TAAMS</h1>
+        <small>Plateforme de Staking v3.0</small>
+      </div>
+      <button id="walletBtn" class="btn btn-neon">
         <i class="fas fa-wallet me-2"></i>Connecter Wallet
       </button>
     </div>
 
-    <div class="row">
+    <div class="row g-4">
       <div class="col-lg-8">
-        <div class="glass-card p-4 mb-4">
-          <h3><i class="fas fa-wallet me-2"></i>Portefeuille Démo</h3>
-          <div class="row mt-3">
+        <div class="glass-card p-4 h-100">
+          <h3><i class="fas fa-chart-line me-2"></i>Votre Portefeuille</h3>
+          
+          <div class="row mt-4">
             <div class="col-md-4">
               <div class="glass-card p-3 text-center">
                 <small>Solde TAAMS</small>
-                <h3 id="tokenBalance">1000</h3>
+                <h3 class="neon-text my-2" id="tokenBalance">0</h3>
               </div>
             </div>
             <div class="col-md-4">
               <div class="glass-card p-3 text-center">
                 <small>Montant Staké</small>
-                <h3 id="stakedAmount">0</h3>
+                <h3 class="neon-text my-2" id="stakedAmount">0</h3>
               </div>
             </div>
             <div class="col-md-4">
               <div class="glass-card p-3 text-center">
                 <small>Récompenses</small>
-                <h3 id="rewards">0</h3>
+                <h3 class="neon-text my-2" id="rewards">0</h3>
               </div>
+            </div>
+          </div>
+          
+          <h3 class="mt-5"><i class="fas fa-lock me-2"></i>Staking</h3>
+          <div class="glass-card p-3 mt-3">
+            <div class="input-group mb-3">
+              <input id="stakeInput" type="number" class="form-control bg-dark text-light" placeholder="Montant TAAMS">
+              <button id="stakeBtn" class="btn btn-neon">Staker</button>
+            </div>
+            <div class="d-flex gap-2">
+              <button id="unstakeBtn" class="btn btn-neon flex-grow-1">Retirer</button>
+              <button id="claimBtn" class="btn btn-neon flex-grow-1">Récompenses</button>
             </div>
           </div>
         </div>
       </div>
+      
       <div class="col-lg-4">
-        <div class="glass-card p-4">
-          <h3><i class="fas fa-trophy me-2"></i>Badges Démo</h3>
-          <div id="badgesContainer" class="d-flex flex-wrap gap-3 mt-3"></div>
+        <div class="glass-card p-4 h-100">
+          <h3><i class="fas fa-trophy me-2"></i>Vos Niveaux</h3>
+          <div class="glass-card p-3 mt-3 text-center">
+            <h4 id="currentLevel" class="neon-text">Nouveau</h4>
+            <div class="progress mt-3 bg-dark" style="height: 10px;">
+              <div id="levelProgress" class="progress-bar" 
+                   style="background: linear-gradient(90deg, var(--primary), var(--neon))"></div>
+            </div>
+          </div>
+          
+          <h3 class="mt-4"><i class="fas fa-award me-2"></i>Badges</h3>
+          <div id="badgesContainer" class="d-flex flex-wrap gap-3 justify-content-center mt-3"></div>
         </div>
       </div>
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
   <script src="app.js"></script>
 </body>
