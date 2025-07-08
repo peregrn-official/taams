@@ -1,184 +1,58 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TAAMS - Staking Premium</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- ... (même head que précédemment) ... -->
   <style>
-    :root {
-      --primary: #6e48aa;
-      --secondary: #9d50bb;
-      --elite: #ffd700;
-      --vip: #b9f2ff;
-      --dark: #0f0f1a;
-      --darker: #080811;
+    /* Ajouts spécifiques mobile */
+    @media (max-width: 768px) {
+      .badge-card {
+        width: 100%;
+        margin-bottom: 15px;
+      }
+      
+      #walletBtn {
+        padding: 10px 15px;
+        font-size: 14px;
+      }
+      
+      /* Empêcher le zoom sur les inputs */
+      input, select, textarea {
+        font-size: 16px !important;
+      }
     }
     
-    body {
-      background: radial-gradient(ellipse at center, var(--darker) 0%, var(--dark) 100%);
-      color: white;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      min-height: 100vh;
-    }
-    
-    .vip-card {
-      background: linear-gradient(145deg, rgba(30,30,50,0.8), rgba(10,10,20,0.9));
-      border: 1px solid var(--secondary);
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(110, 72, 170, 0.3);
-      transition: all 0.3s ease;
-    }
-    
-    .vip-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 12px 40px rgba(157, 80, 187, 0.5);
-    }
-    
-    .badge-elite {
-      background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,215,0,0.05));
-      border: 1px solid var(--elite);
-    }
-    
-    .badge-vip {
-      background: linear-gradient(135deg, rgba(185,242,255,0.1), rgba(185,242,255,0.05));
-      border: 1px solid var(--vip);
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(185,242,255,0.4); }
-      70% { box-shadow: 0 0 0 10px rgba(185,242,255,0); }
-      100% { box-shadow: 0 0 0 0 rgba(185,242,255,0); }
-    }
-    
-    .progress-bar-premium {
-      background: linear-gradient(90deg, var(--primary), var(--secondary), var(--elite));
-      background-size: 200% 200%;
-      animation: gradient 3s ease infinite;
-    }
-    
-    @keyframes gradient {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    /* Correction du viewport mobile */
+    meta[name="viewport"] {
+      content: "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
     }
   </style>
 </head>
 <body>
-  <div class="container py-4">
-    <!-- Header Premium -->
-    <div class="d-flex justify-content-between align-items-center mb-5">
-      <div>
-        <h1 class="display-5 fw-bold">
-          <i class="fas fa-gem me-2"></i>TAAMS <span class="badge bg-primary">PREMIUM</span>
-        </h1>
-        <p class="text-muted">Système de staking à 10 niveaux avec bonus</p>
-      </div>
-      <button id="walletBtn" class="btn btn-lg btn-primary">
-        <i class="fas fa-wallet me-2"></i>Connecter
-      </button>
-    </div>
-
-    <div class="row g-4">
-      <!-- Carte Portefeuille -->
-      <div class="col-lg-8">
-        <div class="vip-card p-4 h-100">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="fas fa-chart-line me-2"></i>Tableau de Bord</h2>
-            <div class="badge bg-dark">v3.1</div>
-          </div>
-          
-          <div class="row">
-            <div class="col-md-4 mb-4">
-              <div class="vip-card p-3 text-center">
-                <h5 class="text-muted">Solde TAAMS</h5>
-                <h2 class="fw-bold" id="tokenBalance">0</h2>
-              </div>
-            </div>
-            <div class="col-md-4 mb-4">
-              <div class="vip-card p-3 text-center">
-                <h5 class="text-muted">Total Staké</h5>
-                <h2 class="fw-bold" id="stakedAmount">0</h2>
-              </div>
-            </div>
-            <div class="col-md-4 mb-4">
-              <div class="vip-card p-3 text-center">
-                <h5 class="text-muted">Récompenses</h5>
-                <h2 class="fw-bold" id="rewards">0</h2>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Section Staking Avancée -->
-          <div class="vip-card p-4 mt-3">
-            <h3 class="mb-4"><i class="fas fa-lock me-2"></i>Staking Premium</h3>
-            
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label">Montant à staker</label>
-                <div class="input-group">
-                  <input type="number" id="stakeInput" class="form-control bg-dark text-white">
-                  <span class="input-group-text">TAAMS</span>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Durée</label>
-                <select id="stakeDuration" class="form-select bg-dark text-white">
-                  <option value="30">30 jours (+5%)</option>
-                  <option value="90">90 jours (+15%)</option>
-                  <option value="180">180 jours (+30%)</option>
-                  <option value="365">1 an (+60%)</option>
-                </select>
-              </div>
-            </div>
-            
-            <div class="d-flex gap-2 mt-4">
-              <button id="stakeBtn" class="btn btn-primary flex-grow-1">
-                <i class="fas fa-lock me-2"></i>Staker
-              </button>
-              <button id="unstakeBtn" class="btn btn-outline-danger flex-grow-1">
-                <i class="fas fa-unlock me-2"></i>Retirer
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Carte Niveaux & Badges -->
-      <div class="col-lg-4">
-        <div class="vip-card p-4 h-100">
-          <h2 class="mb-4"><i class="fas fa-trophy me-2"></i>Progression</h2>
-          
-          <!-- Niveau Actuel -->
-          <div class="vip-card p-3 mb-4">
-            <div class="d-flex justify-content-between mb-2">
-              <h5 id="currentLevel">Niveau 0: Nouveau</h5>
-              <span id="nextLevelReq" class="text-muted">500 TAAMS pour niveau suivant</span>
-            </div>
-            <div class="progress" style="height: 10px;">
-              <div id="levelProgress" class="progress-bar progress-bar-premium" style="width: 0%"></div>
-            </div>
-          </div>
-          
-          <!-- Bonus HODL -->
-          <div class="vip-card p-3 mb-4">
-            <h5><i class="fas fa-clock me-2"></i>Bonus HODL</h5>
-            <p class="mb-2">Multiplicateur actuel: <span id="hodlMultiplier" class="fw-bold">1.0x</span></p>
-            <small class="text-muted">+0.1x par mois de staking continu</small>
-          </div>
-          
-          <!-- Badges -->
-          <h4 class="mt-4 mb-3"><i class="fas fa-award me-2"></i>Badges</h4>
-          <div id="badgesContainer" class="row g-2"></div>
-        </div>
-      </div>
-    </div>
+  <!-- Ajouter ce message d'état -->
+  <div id="connectionStatus" class="alert alert-info fixed-top text-center d-none">
+    <i class="fas fa-sync-alt fa-spin me-2"></i>
+    <span id="statusText">Connexion en cours...</span>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
-  <script src="app.js"></script>
+  <!-- ... (reste du HTML existant) ... -->
+
+  <script>
+    // Détection mobile et gestion des erreurs
+    if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
+      // Solution pour le rafraîchissement
+      window.addEventListener('beforeunload', function() {
+        localStorage.setItem('taams_demo_state', JSON.stringify(state.demoData));
+      });
+      
+      // Restauration de l'état au chargement
+      document.addEventListener('DOMContentLoaded', function() {
+        const savedState = localStorage.getItem('taams_demo_state');
+        if (savedState) {
+          state.demoData = JSON.parse(savedState);
+          updateUI();
+        }
+      });
+    }
+  </script>
 </body>
 </html>
