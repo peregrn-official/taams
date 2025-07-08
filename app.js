@@ -1,7 +1,7 @@
 // Configuration
 const CONFIG = {
   TAAMS_ADDRESS: CONTRACTS.TAAMS.address,
-  VERSION: '2.5.0',
+  VERSION: '2.5.1',
   BADGE_LEVELS: [
     { name: "Nouveau", icon: "fa-seedling", color: "#9e9e9e", threshold: 0 },
     { name: "Bronze", icon: "fa-award", color: "#cd7f32", threshold: 500 },
@@ -48,32 +48,54 @@ async function initWallet() {
 
   state.web3 = new Web3(window.ethereum);
   
-  try {
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    if (accounts.length === 0) throw new Error("Aucun compte connecté");
-    
+  // Vérifier si déjà connecté
+  const accounts = await state.web3.eth.getAccounts();
+  if (accounts.length > 0) {
     state.account = accounts[0];
-    state.contract = new state.web3.eth.Contract(
-      CONTRACTS.TAAMS.abi,
-      CONFIG.TAAMS_ADDRESS
-    );
-    
+    await setupContract();
     updateUI();
     loadData();
-    
-    // Écouteurs d'événements
-    window.ethereum.on('accountsChanged', () => window.location.reload());
-    window.ethereum.on('chainChanged', () => window.location.reload());
-    
+  }
+
+  // Écouteurs d'événements
+  window.ethereum.on('accountsChanged', (accounts) => {
+    if (accounts.length > 0) {
+      state.account = accounts[0];
+      updateUI();
+      loadData();
+    } else {
+      window.location.reload();
+    }
+  });
+  
+  window.ethereum.on('chainChanged', () => window.location.reload());
+}
+
+async function setupContract() {
+  state.contract = new state.web3.eth.Contract(
+    CONTRACTS.TAAMS.abi,
+    CONFIG.TAAMS_ADDRESS
+  );
+}
+
+// Connexion manuelle
+async function connectWallet() {
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    state.account = accounts[0];
+    await setupContract();
+    updateUI();
+    loadData();
   } catch (error) {
     if (error.code === 4001) {
-      throw new Error("Connexion annulée par l'utilisateur");
+      showError("Connexion annulée par l'utilisateur");
+    } else {
+      showError(`Erreur de connexion: ${error.message}`);
     }
-    throw error;
   }
 }
 
-// Jeu Snake
+// Jeu Snake (optimisé pour mobile et PC)
 function initGame() {
   const canvas = document.getElementById('snakeCanvas');
   const ctx = canvas.getContext('2d');
@@ -81,24 +103,30 @@ function initGame() {
   
   let snake = [], food = {}, dx = 0, dy = 0, score = 0, gameLoop;
   let cellSize = 20;
+  let gameSpeed = 150;
 
   function resizeCanvas() {
     const size = Math.min(window.innerWidth * 0.8, 400);
     canvas.width = size - (size % cellSize);
     canvas.height = size - (size % cellSize);
+    if (state.game.isRunning) drawGame();
   }
 
   function startGame() {
     resizeCanvas();
-    snake = [{x: Math.floor(canvas.width/2/cellSize)*cellSize, y: Math.floor(canvas.height/2/cellSize)*cellSize}];
+    snake = [{
+      x: Math.floor(canvas.width/2/cellSize)*cellSize, 
+      y: Math.floor(canvas.height/2/cellSize)*cellSize
+    }];
     placeFood();
     dx = cellSize;
     dy = 0;
     score = 0;
     updateScore();
     if (gameLoop) clearInterval(gameLoop);
-    gameLoop = setInterval(gameStep, 150);
+    gameLoop = setInterval(gameStep, gameSpeed);
     state.game.isRunning = true;
+    modal.style.display = 'flex';
   }
 
   function gameStep() {
@@ -106,7 +134,6 @@ function initGame() {
       endGame();
       return;
     }
-    
     moveSnake();
     drawGame();
   }
@@ -119,25 +146,31 @@ function initGame() {
       score += 10;
       updateScore();
       placeFood();
+      // Augmenter la vitesse progressivement
+      if (score % 50 === 0 && gameSpeed > 50) {
+        gameSpeed -= 5;
+        clearInterval(gameLoop);
+        gameLoop = setInterval(gameStep, gameSpeed);
+      }
     } else {
       snake.pop();
     }
   }
 
   function drawGame() {
-    // Clear canvas
+    // Fond
     ctx.fillStyle = '#1a1a2e';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Draw snake
-    ctx.fillStyle = '#9d50bb';
-    snake.forEach(segment => {
+    // Serpent
+    snake.forEach((segment, index) => {
+      ctx.fillStyle = index === 0 ? '#6e48aa' : '#9d50bb';
       ctx.fillRect(segment.x, segment.y, cellSize, cellSize);
       ctx.strokeStyle = '#6e48aa';
       ctx.strokeRect(segment.x, segment.y, cellSize, cellSize);
     });
     
-    // Draw food
+    // Nourriture
     ctx.fillStyle = '#ffd700';
     ctx.beginPath();
     ctx.arc(food.x + cellSize/2, food.y + cellSize/2, cellSize/2, 0, Math.PI*2);
@@ -149,6 +182,11 @@ function initGame() {
       x: Math.floor(Math.random() * (canvas.width/cellSize)) * cellSize,
       y: Math.floor(Math.random() * (canvas.height/cellSize)) * cellSize
     };
+    // Vérifier que la nourriture n'apparaît pas sur le serpent
+    while (snake.some(segment => segment.x === food.x && segment.y === food.y)) {
+      food.x = Math.floor(Math.random() * (canvas.width/cellSize)) * cellSize;
+      food.y = Math.floor(Math.random() * (canvas.height/cellSize)) * cellSize;
+    }
   }
 
   function checkCollision() {
@@ -167,10 +205,11 @@ function initGame() {
   function endGame() {
     clearInterval(gameLoop);
     state.game.isRunning = false;
+    state.game.score = score;
     alert(`Game Over! Votre score: ${score}`);
   }
 
-  // Contrôles
+  // Contrôles clavier
   document.addEventListener('keydown', e => {
     if (!state.game.isRunning) return;
     
@@ -184,7 +223,7 @@ function initGame() {
 
   // Contrôles tactiles
   document.querySelectorAll('.touch-btn').forEach(btn => {
-    btn.addEventListener('touchstart', (e) => {
+    btn.addEventListener('click', (e) => {
       e.preventDefault();
       if (!state.game.isRunning) return;
       
@@ -199,38 +238,35 @@ function initGame() {
   });
 
   // Gestion de la modale
-  document.getElementById('playSnakeBtn').addEventListener('click', () => {
-    modal.style.display = 'flex';
+  document.getElementById('playSnakeBtn').addEventListener('click', startGame);
+  document.getElementById('restartGameBtn').addEventListener('click', () => {
+    gameSpeed = 150;
     startGame();
   });
-
-  document.getElementById('restartGameBtn').addEventListener('click', startGame);
   document.getElementById('closeGameBtn').addEventListener('click', () => {
     modal.style.display = 'none';
     clearInterval(gameLoop);
     state.game.isRunning = false;
   });
 
-  window.addEventListener('resize', () => {
-    if (state.game.isRunning) {
-      resizeCanvas();
-    }
-  });
+  window.addEventListener('resize', resizeCanvas);
 }
 
 // Gestion des données
 async function loadData() {
-  if (!state.account) return;
+  if (!state.account || !state.contract) return;
   
   try {
+    showLoading(true);
+    
     // Solde
     const balance = await state.contract.methods.balanceOf(state.account).call();
-    document.getElementById('tokenBalance').textContent = state.web3.utils.fromWei(balance, 'ether');
+    document.getElementById('tokenBalance').textContent = parseFloat(state.web3.utils.fromWei(balance, 'ether')).toFixed(2);
     
     // Staking
     const stake = await state.contract.methods.stakes(state.account).call();
     const stakedAmount = state.web3.utils.fromWei(stake.amount, 'ether');
-    document.getElementById('stakedAmount').textContent = stakedAmount;
+    document.getElementById('stakedAmount').textContent = parseFloat(stakedAmount).toFixed(2);
     
     // Récompenses
     const rewards = calculateRewards(stake.amount, stake.timestamp);
@@ -242,10 +278,13 @@ async function loadData() {
   } catch (error) {
     console.error("Load data error:", error);
     showError("Erreur de chargement des données");
+  } finally {
+    showLoading(false);
   }
 }
 
 function calculateRewards(amount, timestamp) {
+  if (amount == 0) return 0;
   const duration = (Date.now() / 1000 - timestamp) / 86400; // jours
   return (duration * amount * 0.01) / 1e18; // 1% par jour
 }
@@ -257,11 +296,12 @@ function updateBadges(stakedAmount) {
   
   CONFIG.BADGE_LEVELS.forEach((badge, index) => {
     const active = amount >= badge.threshold;
-    const nextLevel = CONFIG.BADGE_LEVELS[index + 1];
     let progress = 0;
+    let nextThreshold = null;
     
-    if (nextLevel) {
-      progress = Math.min(100, ((amount - badge.threshold) / (nextLevel.threshold - badge.threshold)) * 100);
+    if (index < CONFIG.BADGE_LEVELS.length - 1) {
+      nextThreshold = CONFIG.BADGE_LEVELS[index + 1].threshold;
+      progress = Math.min(100, ((amount - badge.threshold) / (nextThreshold - badge.threshold)) * 100);
     } else if (active) {
       progress = 100;
     }
@@ -284,7 +324,7 @@ function updateBadges(stakedAmount) {
   
   // Mise à jour niveau actuel
   const currentLevel = calculateLevel(amount);
-  document.getElementById('currentLevel').textContent = currentLevel;
+  document.getElementById('currentLevel').textContent = CONFIG.BADGE_LEVELS[currentLevel].name;
   document.getElementById('levelProgress').style.width = `${(currentLevel / (CONFIG.BADGE_LEVELS.length - 1)) * 100}%`;
 }
 
@@ -307,39 +347,55 @@ async function stakeTokens() {
   }
 
   try {
+    showLoading(true);
     await state.contract.methods.stake(state.web3.utils.toWei(amount, 'ether'))
       .send({ from: state.account });
-    loadData();
+    await loadData();
   } catch (error) {
     showError("Échec du staking: " + (error.message || "Annulé par l'utilisateur"));
+  } finally {
+    showLoading(false);
   }
 }
 
 async function unstakeTokens() {
   try {
+    showLoading(true);
     await state.contract.methods.unstake()
       .send({ from: state.account });
-    loadData();
+    await loadData();
   } catch (error) {
     showError("Échec du retrait: " + (error.message || "Annulé par l'utilisateur"));
+  } finally {
+    showLoading(false);
   }
 }
 
 async function claimRewards() {
   try {
+    showLoading(true);
     await state.contract.methods.claimRewards()
       .send({ from: state.account });
-    loadData();
+    await loadData();
   } catch (error) {
     showError("Échec du claim: " + (error.message || "Annulé par l'utilisateur"));
+  } finally {
+    showLoading(false);
   }
 }
 
 // UI Helpers
 function updateUI() {
   const btn = document.getElementById('walletBtn');
-  btn.innerHTML = `<i class="fas fa-check-circle me-2"></i>${shortAddress(state.account)}`;
-  btn.classList.add('connected');
+  if (state.account) {
+    btn.innerHTML = `<i class="fas fa-check-circle me-2"></i>${shortAddress(state.account)}`;
+    btn.classList.add('connected');
+    btn.removeEventListener('click', connectWallet);
+  } else {
+    btn.innerHTML = `<i class="fas fa-wallet me-2"></i>Connecter Wallet`;
+    btn.classList.remove('connected');
+    btn.addEventListener('click', connectWallet);
+  }
 }
 
 function shortAddress(address) {
@@ -353,14 +409,25 @@ function showError(message, elementId = 'errorAlert') {
   setTimeout(() => element.classList.add('d-none'), 5000);
 }
 
+function showLoading(show) {
+  const loader = document.getElementById('loadingIndicator');
+  if (show) {
+    loader.classList.remove('d-none');
+  } else {
+    loader.classList.add('d-none');
+  }
+}
+
 function setupEventListeners() {
   document.getElementById('stakeBtn').addEventListener('click', stakeTokens);
   document.getElementById('unstakeBtn').addEventListener('click', unstakeTokens);
   document.getElementById('claimBtn').addEventListener('click', claimRewards);
   
-  // Gestion du clavier pour le jeu
+  // Empêcher le défilement avec les flèches
   document.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT') return;
-    e.preventDefault();
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && 
+        e.target.tagName !== 'INPUT') {
+      e.preventDefault();
+    }
   }, { passive: false });
 }
