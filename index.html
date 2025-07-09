@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taams-Mème Crypto 9000 - La Folie Absolue</title>
+    <style>
+        /* == STYLE DE BASE == */
+        body {
+            font-family: 'Comic Sans MS', 'Wingdings', cursive;
+            background: #000 url('https://i.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.webp');
+            color: lime;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 10px dotted fuchsia;
+            box-shadow: 0 0 50px #ff00ff;
+        }
+        
+        h1 {
+            font-size: 4em;
+            text-shadow: 0 0 20px #ff00ff, 0 0 40px #00ffff;
+            animation: rainbow 5s infinite;
+            margin-bottom: 0;
+        }
+        
+        h2 {
+            color: cyan;
+            text-decoration: underline wavy yellow;
+            font-size: 2.5em;
+        }
+        
+        /* == ANIMATIONS == */
+        @keyframes rainbow {
+            0% { color: red; }
+            14% { color: orange; }
+            28% { color: yellow; }
+            42% { color: lime; }
+            57% { color: blue; }
+            71% { color: indigo; }
+            85% { color: violet; }
+            100% { color: red; }
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+        
+        /* == ÉLÉMENTS SPÉCIAUX == */
+        .feature {
+            background: rgba(0, 255, 255, 0.1);
+            border: 5px double magenta;
+            border-radius: 50px;
+            padding: 20px;
+            margin: 30px 0;
+            transition: all 0.5s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature:hover {
+            transform: scale(1.05) rotate(1deg);
+            background: rgba(255, 0, 255, 0.2);
+            box-shadow: 0 0 30px cyan;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            border: none;
+            color: black;
+            padding: 15px 25px;
+            font-size: 1.5em;
+            border-radius: 100px;
+            cursor: pointer;
+            margin: 15px;
+            transition: all 0.3s;
+            font-weight: bold;
+            text-shadow: 0 0 5px white;
+            box-shadow: 0 0 20px #ff00ff;
+        }
+        
+        button:hover {
+            background: linear-gradient(45deg, #ffff00, #ff0000);
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 0 30px yellow;
+        }
+        
+        #panicButton {
+            animation: pulse 0.5s infinite, rainbowbg 3s infinite;
+            font-size: 2em;
+            padding: 20px 40px;
+        }
+        
+        #rugPullBtn {
+            background: black;
+            color: red;
+            border: 5px solid red;
+            animation: flash 0.2s infinite;
+        }
+        
+        .meme-img {
+            max-width: 100%;
+            border: 10px groove gold;
+            border-radius: 20px;
+            margin: 20px 0;
+            transition: all 0.5s;
+        }
+        
+        .meme-img:hover {
+            transform: scale(1.1) rotate(5deg);
+            border: 10px dotted hotpink;
+            filter: hue-rotate(90deg);
+        }
+        
+        /* == COURS DU MARCHÉ == */
+        .market-ticker {
+            background: black;
+            color: lime;
+            padding: 15px;
+            border: 3px solid #ff00ff;
+            font-family: monospace;
+            font-size: 1.5em;
+            margin: 20px 0;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        
+        /* == MODE DARK ULTRA == */
+        body.dark-mode {
+            background: #000 url('https://i.giphy.com/media/12zV7u6Bh0vHpu/giphy.webp');
+            color: red;
+            filter: invert(1) hue-rotate(180deg);
+        }
+        
+        body.dark-mode .container {
+            border: 10px dashed #ff0000;
+            box-shadow: 0 0 50px #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 TAAMS-MÈME CRYPTO 9000 🤪</h1>
+        <p style="font-size: 1.5em;">L'application crypto la plus folle de l'univers (et probablement illégale)</p>
+        
+        <!-- == COURS DU MARCHÉ DÉLIRANT == -->
+        <div class="market-ticker" id="marketTicker">
+            🚀 DABABYCOIN: $69,420 (+420%) | 🐶 DOGE2.0: $0.0001 (-99.99%) | 🦄 LICORNIX: $NaN (bug) | 💩 SHITCOIN: $0.0000001 (rug pull imminent) | 🍌 BANANACOIN: 3 bananes
+        </div>
+        
+        <!-- == TOKEN DABABY CONVERTIBLE == -->
+        <div class="feature">
+            <h2>💎 Token "Dababy Convertible" (DBC) 🚗</h2>
+            <p>Hold pendant 1 an et ton token se transforme en NFT de voiture. Si le prix baisse, c'est une trottinette.</p>
+            <img src="https://i.imgur.com/JqYeZvn.png" class="meme-img" alt="Dababy en Lambo">
+            <button id="buyDBC">Acheter 1000 DBC (1€)</button>
+            <p id="dbcStatus">Statut: En attente de moon... 🌑</p>
+            <button id="transformCar">Transformer en voiture NFT (1 an requis)</button>
+        </div>
+        
+        <!-- == MEME MARKET == -->
+        <div class="feature">
+            <h2>📈 Meme Market 🤡</h2>
+            <p>Achetez des memes comme des actions. Plus c'est partagé, plus ça monte!</p>
+            <div id="memeDisplay">
+                <img src="https://i.imgur.com/8JZ3QqG.jpg" class="meme-img" alt="Doge 2.0">
+                <p>Doge 2.0 - "Le retour du Shiba"</p>
+            </div>
+            <button id="buyMeme">Acheter ce meme (10€)</button>
+            <button id="shareMeme">Partager sur OnlyFans</button>
+            <p id="memeValue">Valeur actuelle: 0.0001 ETH</p>
+        </div>
+        
+        <!-- == CASINO DES SHITCOINS == -->
+        <div class="feature">
+            <h2>🎰 Casino des Shitcoins 💩</h2>
+            <p>Misez sur le prochain coin qui va moon (ou pas). Les perdants reçoivent un NFT spécial!</p>
+            <div id="slotMachine">
+                <p>[ 🍌 | 💩 | 🚀 ]</p>
+                <p>[ 🦄 | 🐶 | 🌕 ]</p>
+                <p>[ 🏴‍☠️ | 🎰 | 💎 ]</p>
+            </div>
+            <button id="spinSlots">Tourner la machine (1 ETH)</button>
+            <p id="slotResult"></p>
+            <button id="claimNft">Récupérer mon NFT de perdant</button>
+        </div>
+        
+        <!-- == FAUSSE ICO == -->
+        <div class="feature" style="background: linear-gradient(45deg, #ff0000, #000000);">
+            <h2>🚀 SQUIDGAMECOIN 3.0 ICO 💎</h2>
+            <p>Le token qui va probablement te ruiner (mais avec style).</p>
+            
+            <div style="background: #333; border-radius: 20px; margin: 20px; height: 40px;">
+                <div id="icoProgress" style="background: linear-gradient(90deg, #ff00ff, #00ffff); height: 100%; width: 5%; border-radius: 20px;"></div>
+            </div>
+            <p id="icoRaised">0% complété (0 ETH) - SOON MOON ?</p>
+            
+            <button id="buyIcoSmall">Acheter 1000 SQC (1 ETH)</button>
+            <button id="buyIcoBig">Pack Whale (10,000 SQC) 🐋</button>
+            <button id="rugPullBtn">🚨 ACTIVER LE RUG PULL</button>
+            
+            <div style="margin-top: 20px;">
+                <p>📢 <b>FAKE NEWS:</b> "ELON MUSK A DIT QUE C'ÉTAIT LE MEILLEUR PROJET DEPUIS LE PAIN TRANCHÉ"</p>
+                <p>🔒 <b>AUDIT:</b> "FAIT PAR MON CHIEN (IL A 3 ANS)"</p>
+            </div>
+        </div>
+        
+        <!-- == NOUVEAU: MINIGAME PONZI == -->
+        <div class="feature">
+            <h2>🏦 Simulateur Ponzi 🎮</h2>
+            <p>Recrute des amis et vole leur argent comme un vrai pro!</p>
+            <div id="ponziStats">
+                <p>Victimes recrutées: 0</p>
+                <p>Argent volé: $0</p>
+                <p>Risque de prison: 0%</p>
+            </div>
+            <button id="recruitVictim">Recruter un pigeon</button>
+            <button id="stealMoney">Voler l'argent</button>
+            <button id="bribeCop">Soudoyer un policier (50 ETH)</button>
+        </div>
+        
+        <!-- == BOUTON PANIQUE == -->
+        <div class="feature">
+            <h2>🚨 Bouton Panique Ultime 🚨</h2>
+            <p>En cas de crash, appuyez ici pour un calmant virtuel.</p>
+            <button id="panicButton">PANIC SELL EVERYTHING</button>
+            <div id="panicGif" style="display: none;">
+                <img src="https://media.giphy.com/media/l0HU7JI1QStj0K7Y4/giphy.gif" width="300">
+                <p style="font-size: 2em;">TOUT VA BIEN DÉTENDEZ-VOUS</p>
+            </div>
+        </div>
+        
+        <!-- == MODE DARK == -->
+        <div class="feature">
+            <h2>🌑 Mode Dark Ultime 👹</h2>
+            <p>Activez ce mode pour une expérience vraiment inquiétante.</p>
+            <button id="darkMode">ACTIVER LE MODE DARK</button>
+            <button id="bloodMode">ACTIVER LE MODE SANG (18+)</button>
+        </div>
+    </div>
+
+    <script>
+        // == VARIABLES GLOBALES ==
+        let icoProgress = 0;
+        let ponziVictims = 0;
+        let ponziMoney = 0;
+        let ponziRisk = 0;
+        
+        // == FONCTIONS DU MARCHÉ ==
+        function updateMarket() {
+            const coins = [
+                "DABABYCOIN: $" + Math.random().toFixed(8),
+                "DOGE2.0: $" + (Math.random() * 0.01).toFixed(6),
+                "LICORNIX: $NaN (bug)",
+                "SHITCOIN: $0.000000" + Math.floor(Math.random() * 10),
+                "BANANACOIN: " + Math.floor(Math.random() * 10) + " bananes",
+                "SQUIDGAME3: $" + (420 + Math.random() * 100).toFixed(2),
+                "SCAMTOKEN: $0 (rug pulled)"
+            ];
+            
+            // Mélanger les coins
+            for (let i = coins.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [coins[i], coins[j]] = [coins[j], coins[i]];
+            }
+            
+            document.getElementById('marketTicker').textContent = "🚀 " + coins.join(" | 🚀 ");
+        }
+        
+        setInterval(updateMarket, 2000);
+        
+        // == FONCTIONS DBC ==
+        document.getElementById('buyDBC').addEventListener('click', function() {
+            document.getElementById('dbcStatus').innerHTML = "Statut: Moon imminent! 🚀<br><small>Vérité: C'est probablement un scam</small>";
+            this.style.animation = "shake 0.5s";
+            setTimeout(() => { this.style.animation = ""; }, 500);
+        });
+        
+        document.getElementById('transformCar').addEventListener('click', function() {
+            alert("ERREUR: Vous n'avez pas hold assez longtemps\nRevenez dans 1 an (le projet n'existera plus)");
+        });
+        
+        // == FONCTIONS MEME MARKET ==
+        const memes = [
+            { url: "https://i.imgur.com/8JZ3QqG.jpg", name: "Doge 2.0", value: 0.0001 },
+            { url: "https://i.imgur.com/JqYeZvn.png", name: "Dababy Lambo", value: 0.42 },
+            { url: "https://i.imgur.com/jX7QvYZ.jpg", name: "Sarkozy NFT", value: 0.001 },
+            { url: "https://i.imgur.com/VHwMJFp.jpg", name: "Vitalik Butcoin", value: 4.20 }
+        ];
+        let currentMeme = 0;
+        
+        function updateMeme() {
+            const meme = memes[currentMeme];
+            document.getElementById('memeDisplay').innerHTML = `
+                <img src="${meme.url}" class="meme-img" alt="${meme.name}">
+                <p>${meme.name} - Valeur: ${meme.value} ETH</p>
+            `;
+        }
+        
+        document.getElementById('buyMeme').addEventListener('click', function() {
+            const meme = memes[currentMeme];
+            alert(`FÉLICITATIONS!\nVous avez acheté "${meme.name}" pour ${meme.value} ETH\nVous venez de perdre de l'argent!`);
+        });
+        
+        document.getElementById('shareMeme').addEventListener('click', function() {
+            alert("Posté sur OnlyFans!\nVos abonnés sont confus mais le meme a pris +0.00001 ETH de valeur");
+            memes[currentMeme].value += 0.00001;
+            updateMeme();
+        });
+        
+        // == FONCTIONS CASINO ==
+        document.getElementById('spinSlots').addEventListener('click', function() {
+            const symbols = ["🍌", "💩", "🚀", "🦄", "🐶", "🌕", "🏴‍☠️", "🎰", "💎", "👑", "🍆"];
+            let result = "";
+            
+            for (let i = 0; i < 3; i++) {
+                const line = [];
+                for (let j = 0; j < 3; j++) {
+                    line.push(symbols[Math.floor(Math.random() * symbols.length)]);
+                }
+                result += `[ ${line.join(" | ")} ]<br>`;
+            }
+            
+            document.getElementById('slotMachine').innerHTML = result;
+            
+            // Résultat aléatoire
+            const outcomes = [
+                "VOUS AVEZ GAGNÉ! (Just kidding, c'est un scam)",
+                "VOUS AVEZ PERDU! Comme prévu...",
+                "RIEN NE SE PASSE (le dev a oublié de coder cette partie)",
+                "TO THE MOON! (Non en fait c'est un rug pull)"
+            ];
+            document.getElementById('slotResult').innerHTML = outcomes[Math.floor(Math.random() * outcomes.length)];
+        });
+        
+        document.getElementById('claimNft').addEventListener('click', function() {
+            alert("VOICI VOTRE NFT DE PERDANT:\n\n(.)(.)\n<===>\n  ||\nUn magnifique NFT de seins (vous avez perdu)");
+        });
+        
+        // == FONCTIONS ICO ==
+        document.getElementById('buyIcoSmall').addEventListener('click', function() {
+            icoProgress += Math.random() * 15;
+            updateIco();
+            alert("Vous avez acheté 1000 SquidGameCoin 3.0!\nMerci pour votre argent!");
+        });
+        
+        document.getElementById('buyIcoBig').addEventListener('click', function() {
+            icoProgress += Math.random() * 30;
+            updateIco();
+            alert("WHALE DETECTED 🐋\nVous avez acheté le pack à 10,000 SQC!\n(Préparez-vous à tout perdre)");
+        });
+        
+        document.getElementById('rugPullBtn').addEventListener('click', function() {
+            icoProgress = 100;
+            updateIco();
+            document.getElementById('icoRaised').innerHTML = "<span style='color:red; font-size:1.5em;'>🚨 RUUG PULL! LES DEVS ONT DISPARU AVEC VOTRE ARGENT 💨</span>";
+            
+            setTimeout(() => {
+                alert("C'ÉTAIT ÉVIDENT DEPUIS LE DÉBUT...\n\nPour vous consoler, voici un NFT de chat:");
+                document.getElementById('memeDisplay').innerHTML = `
+                    <img src="https://i.imgur.com/VHwMJFp.jpg" class="meme-img" alt="Chat NFT">
+                    <p>Votre NFT de consolation</p>
+                `;
+            }, 1000);
+        });
+        
+        function updateIco() {
+            if (icoProgress > 100) icoProgress = 100;
+            document.getElementById('icoProgress').style.width = `${icoProgress}%`;
+            
+            const messages = [
+                "Un whale vient d'acheter! (fake)",
+                "Vitalik a liké notre tweet! (fake)",
+                "Pump imminent! (trust me bro)",
+                "Scam confirmé! (oh wait...)"
+            ];
+            const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+            
+            document.getElementById('icoRaised').textContent = 
+                `${Math.round(icoProgress)}% complété (${Math.round(icoProgress * 100)} ETH) - ${randomMsg}`;
+        }
+        
+        // == FONCTIONS PONZI ==
+        document.getElementById('recruitVictim').addEventListener('click', function() {
+            ponziVictims++;
+            ponziRisk += 5;
+            updatePonziStats();
+            
+            if (ponziVictims % 5 === 0) {
+                alert(`Vous avez recruté ${ponziVictims} pigeons!\nLe FBI commence à s'intéresser à vous...`);
+            }
+        });
+        
+        document.getElementById('stealMoney').addEventListener('click', function() {
+            const stolen = Math.floor(Math.random() * 1000);
+            ponziMoney += stolen;
+            ponziRisk += 10;
+            updatePonziStats();
+            
+            alert(`Vous avez volé $${stolen}!\nVos victimes sont en colère...`);
+        });
+        
+        document.getElementById('bribeCop').addEventListener('click', function() {
+            if (ponziMoney >= 50) {
+                ponziMoney -= 50;
+                ponziRisk = Math.max(0, ponziRisk - 30);
+                updatePonziStats();
+                alert("Vous avez soudoyé un policier!\nVotre risque de prison a diminué... pour l'instant");
+            } else {
+                alert("Pas assez d'argent pour soudoyer!\nAllez voler plus de gens d'abord");
+            }
+        });
+        
+        function updatePonziStats() {
+            document.getElementById('ponziStats').innerHTML = `
+                <p>Victimes recrutées: ${ponziVictims}</p>
+                <p>Argent volé: $${ponziMoney}</p>
+                <p>Risque de prison: ${Math.min(100, ponziRisk)}%</p>
+            `;
+            
+            if (ponziRisk >= 100) {
+                alert("GAME OVER\nLa police vous a arrêté!\n\nFin du jeu Ponzi");
+                ponziVictims = 0;
+                ponziMoney = 0;
+                ponziRisk = 0;
+                updatePonziStats();
+            }
+        }
+        
+        // == BOUTON PANIQUE ==
+        document.getElementById('panicButton').addEventListener('click', function() {
+            document.getElementById('panicGif').style.display = "block";
+            document.body.style.animation = "shake 0.5s";
+            
+            setTimeout(() => {
+                document.getElementById('panicGif').style.display = "none";
+                document.body.style.animation = "";
+            }, 3000);
+        });
+        
+        // == MODE DARK ==
+        document.getElementById('darkMode').addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+        });
+        
+        document.getElementById('bloodMode').addEventListener('click', function() {
+            alert("⚠️ MODE SANG ACTIVÉ (18+)\n\nLe site est maintenant couvert de sang virtuel...");
+            document.body.style.background = "#000 url('https://i.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.webp')";
+            document.body.style.color = "darkred";
+            document.querySelector('.container').style.border = "10px solid darkred";
+        });
+        
+        // Initialisation
+        updateMarket();
+        updateMeme();
+        updatePonziStats();
+    </script>
+</body>
+</html>
