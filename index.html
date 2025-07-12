@@ -67,14 +67,14 @@
           <h3 class="text-2xl font-semibold text-purple-400 mb-4">Stake Tokens</h3>
           <p class="text-gray-300 mb-4">Lock your tokens to earn rewards over time.</p>
           <div class="text-3xl font-bold text-purple-400 animate-pulse-slow">+5% APY</div>
-          <button class="mt-4 bg-purple-500 text-white px-6 py-2 rounded-full cursor-not-allowed opacity-50">Stake Now (Demo)</button>
+          <button id="stakeBtn" class="mt-4 bg-purple-500 text-white px-6 py-2 rounded-full">Stake Now (Demo)</button>
         </div>
         <!-- Demo: Reward Wheel -->
         <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
           <h3 class="text-2xl font-semibold text-purple-400 mb-4">Spin the Wheel</h3>
           <p class="text-gray-300 mb-4">Try your luck for token and NFT rewards!</p>
           <div class="w-32 h-32 mx-auto demo-wheel rounded-full animate-spin-slow mb-4"></div>
-          <button class="mt-4 bg-purple-500 text-white px-6 py-2 rounded-full cursor-not-allowed opacity-50">Spin Now (Demo)</button>
+          <button id="spinBtn" class="mt-4 bg-purple-500 text-white px-6 py-2 rounded-full">Spin Now (Demo)</button>
         </div>
         <!-- Demo: Governance -->
         <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
@@ -82,8 +82,8 @@
           <p class="text-gray-300 mb-4">Shape the protocol with your vote.</p>
           <div class="text-lg text-gray-300">Proposal #1: Increase Rewards</div>
           <div class="flex justify-center space-x-4 mt-4">
-            <button class="bg-green-500 text-white px-4 py-2 rounded-full cursor-not-allowed opacity-50">Vote For</button>
-            <button class="bg-red-500 text-white px-4 py-2 rounded-full cursor-not-allowed opacity-50">Vote Against</button>
+            <button id="voteForBtn" class="bg-green-500 text-white px-4 py-2 rounded-full">Vote For</button>
+            <button id="voteAgainstBtn" class="bg-red-500 text-white px-4 py-2 rounded-full">Vote Against</button>
           </div>
         </div>
       </div>
@@ -160,5 +160,28 @@
       <p class="text-sm text-gray-500">Disclaimer: TAAMS is in development. Conduct due diligence before participating.</p>
     </div>
   </footer>
+  
+  <!-- Demo JS -->
+  <script>
+    // Staking demo
+    document.getElementById('stakeBtn').onclick = function() {
+      alert("Vous avez staké des tokens ! (simulation)");
+    };
+
+    // Spin the wheel demo
+    document.getElementById('spinBtn').onclick = function() {
+      const rewards = ["10 TAAMS", "1 NFT", "Rien", "100 TAAMS", "Boost APY", "Essai encore !"];
+      const result = rewards[Math.floor(Math.random() * rewards.length)];
+      alert("Résultat : " + result);
+    };
+
+    // Governance demo
+    document.getElementById('voteForBtn').onclick = function() {
+      alert("Vous avez voté POUR la proposition !");
+    };
+    document.getElementById('voteAgainstBtn').onclick = function() {
+      alert("Vous avez voté CONTRE la proposition !");
+    };
+  </script>
 </body>
 </html>
