@@ -1,4 +1,5 @@
 # TAAMS Smart Contract
+TAAMS is a gamified DeFi protocol built on Polygon, combining staking, token burn dynamics, and NFT utilities. Designed for decentralization and community governance, TAAMS integrates a reward wheel, BL2P tokens, and on-chain proposals for evolving the protocol.
 
 ![Polygon](https://img.shields.io/badge/Blockchain-Polygon-blueviolet)
 ![Solidity](https://img.shields.io/badge/Solidity-^0.8.20-blue)
