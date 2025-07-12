@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TAAMS - Feuille de route</title>
+  <meta name="description" content="Roadmap du projet TAAMS : découvrez les jalons, les dates et les prochaines étapes du protocole DeFi sur Polygon.">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .hero-bg { background: linear-gradient(135deg, #7C3AED, #00B4D8); }
+    .fade-in { animation: fadeIn 1s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .feature-card:hover { transform: translateY(-5px); transition: transform 0.3s ease; }
+  </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+  <!-- Header -->
+  <header class="bg-gray-800 shadow fixed w-full top-0 z-10">
+    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center">
+        <img src="https://raw.githubusercontent.com/peregrn-official/taams/main/assets/logo.jpg" alt="Logo TAAMS" class="h-12 mr-3">
+        <span class="text-2xl font-bold text-purple-400">TAAMS</span>
+      </div>
+      <div class="space-x-6">
+        <a href="index.html#home" class="text-gray-300 hover:text-purple-400">Accueil</a>
+        <a href="index.html#about" class="text-gray-300 hover:text-purple-400">À propos</a>
+        <a href="index.html#demo" class="text-gray-300 hover:text-purple-400">Démo</a>
+        <a href="index.html#features" class="text-gray-300 hover:text-purple-400">Fonctionnalités</a>
+        <a href="roadmap.html" class="text-purple-400 font-semibold underline">Roadmap</a>
+        <a href="index.html#contact" class="text-gray-300 hover:text-purple-400">Contact</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Roadmap Section -->
+  <section class="pt-32 pb-20 bg-gray-900 min-h-screen fade-in">
+    <div class="container mx-auto px-6">
+      <h1 class="text-5xl font-extrabold text-center mb-12 text-purple-400">Feuille de route TAAMS</h1>
+      <p class="text-xl text-gray-300 text-center mb-10 max-w-3xl mx-auto">Découvrez les grandes étapes du développement du protocole TAAMS, nos priorités et nos ambitions.</p>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
+          <h2 class="text-xl font-semibold text-purple-400 mb-2">Juillet 2025</h2>
+          <ul class="text-gray-300 list-disc list-inside text-left mt-4">
+            <li>Finalisation du site vitrine TAAMS</li>
+            <li>Démo interactive sur le front (staking, roue, vote)</li>
+            <li>Création du dépôt GitHub public</li>
+          </ul>
+        </div>
+        <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
+          <h2 class="text-xl font-semibold text-purple-400 mb-2">Août - Septembre 2025</h2>
+          <ul class="text-gray-300 list-disc list-inside text-left mt-4">
+            <li>Développement du smart contract TAAMS (core, staking, governance)</li>
+            <li>Documentation technique et fonctionnelle</li>
+            <li>Tests unitaires & déploiement local</li>
+            <li>Ajout du simulateur de parrainage</li>
+          </ul>
+        </div>
+        <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
+          <h2 class="text-xl font-semibold text-purple-400 mb-2">Octobre - Décembre 2025</h2>
+          <ul class="text-gray-300 list-disc list-inside text-left mt-4">
+            <li>Déploiement sur Testnet Polygon (Mumbai)</li>
+            <li>Audit communautaire (bug bounty, retours Discord)</li>
+            <li>Optimisation sécurité du contrat</li>
+            <li>Ajout d’une fonctionnalité NFT (récompenses, avatars)</li>
+            <li>Ouverture de la bêta à la communauté</li>
+          </ul>
+        </div>
+        <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
+          <h2 class="text-xl font-semibold text-purple-400 mb-2">2026 et au-delà</h2>
+          <ul class="text-gray-300 list-disc list-inside text-left mt-4">
+            <li>Lancement officiel sur Mainnet Polygon</li>
+            <li>Partenariats avec d’autres protocoles DeFi</li>
+            <li>Intégration de nouveaux modules (prêts, pools de liquidité)</li>
+            <li>Extension du système de vote (propositions décentralisées)</li>
+            <li>Grand tournoi communautaire (NFT et TAAMS à gagner)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 py-8">
+    <div class="container mx-auto px-6 text-center">
+      <p class="text-gray-300 mb-2">© 2025 TAAMS. Tous droits réservés.</p>
+      <p class="text-gray-300 mb-2">
+        <a href="https://github.com/peregrn-official/taams" target="_blank" class="text-purple-400 hover:text-purple-300">GitHub</a> |
+        <a href="#license" class="text-purple-400 hover:text-purple-300">Licence MIT</a>
+      </p>
+      <p class="text-sm text-gray-500">Avertissement : TAAMS est en développement. Faites vos propres recherches avant de participer.</p>
+    </div>
+  </footer>
+</body>
+</html>
