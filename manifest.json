@@ -1,0 +1,21 @@
+{
+    "name": "TAAMS DApp",
+    "short_name": "TAAMS",
+    "description": "Application pour interagir avec le contrat TAAMS sur MegaETH testnet",
+    "start_url": "/taams/",
+    "display": "standalone",
+    "background_color": "#1a202c",
+    "theme_color": "#1a202c",
+    "icons": [
+        {
+            "src": "/taams/icon.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/taams/icon.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
