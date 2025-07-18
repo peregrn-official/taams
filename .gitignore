@@ -3,7 +3,7 @@
 
 # ⚙️ Hardhat & backend
 hardhat.config.js
-contracts/
+
 scripts/
 artifacts/
 cache/
