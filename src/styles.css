@@ -1,3 +1,75 @@
+@config "../tailwind.config.js"; /* si tu es en Tailwind v4 */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: #1a202c;
+    color: #e2e8f0;
+    margin: 0;
+}
+nav {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: #2d3748;
+    padding: 1rem;
+}
+nav .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+section {
+    scroll-margin-top: 80px;
+}
+button {
+    @apply bg-blue-600 text-white border-none py-3 px-6 rounded cursor-pointer;
+}
+button:hover {
+    @apply bg-blue-700 transition-colors duration-300;
+}
+input, select {
+    @apply border border-gray-600 text-white bg-gray-700 p-2 rounded w-full mb-2;
+}
+input:focus, select:focus {
+    @apply outline-none border-blue-500 ring-2 ring-blue-200;
+}
+canvas {
+    @apply border-2 border-gray-600 rounded-full bg-gray-700;
+}
+.hero {
+    @apply h-screen flex items-center justify-center bg-gradient-to-r from-blue-600 to-purple-600;
+}
+.hero .container {
+    @apply max-w-5xl mx-auto px-4;
+}
+.interact {
+    @apply py-20 max-w-5xl mx-auto px-4;
+}
+.interact h2 {
+    @apply text-3xl md:text-4xl font-bold text-center mb-10;
+}
+.grid {
+    @apply grid grid-cols-1 gap-6;
+}
+@media (min-width: 768px) {
+    .grid {
+        @apply grid-cols-3;
+    }
+}
+.card {
+    @apply bg-gray-700 p-6 rounded-lg shadow-lg;
+}
+@media (max-width: 640px) {
+    h2 {
+        @apply text-2rem;
+    }
+    button, input, select {
+        @apply text-sm;
+    }
+    canvas {
+        @apply w-64 h-64;
+    }
+}
