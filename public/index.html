@@ -4,9 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TAAMS DApp</title>
+
+  <!-- ✅ Librairie Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- ✅ Librairie Ethers.js (pour Web3 & MetaMask) -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script src="app.js" type="module"></script>
+
+  <!-- ✅ Patch CSS moderne pour la gestion du zoom mobile -->
+  <style>
+    :host, html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+  </style>
+
+  <!-- ✅ Ton script JavaScript, sans "type=module" pour compatibilité directe -->
+  <script src="app.js"></script>
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
   <div class="container mx-auto px-4 py-8">
