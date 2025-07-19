@@ -38,13 +38,13 @@
       <div class="flex items-center space-x-4">
         <!-- Desktop Menu -->
         <div class="hidden md:flex space-x-6">
-          <a href="#/home" class="text-gray-300 hover:text-purple-400">Accueil</a>
-          <a href="#/dashboard" class="text-gray-300 hover:text-purple-400">Tableau de bord</a>
-          <a href="#/burn" class="text-gray-300 hover:text-purple-400">Burn</a>
-          <a href="#/wheel" class="text-gray-300 hover:text-purple-400">Roue</a>
-          <a href="#/stake" class="text-gray-300 hover:text-purple-400">Staking</a>
-          <a href="#/governance" class="text-gray-300 hover:text-purple-400">Gouvernance</a>
-          <a href="#/my-status" class="text-gray-300 hover:text-purple-400">Mon statut</a>
+          <a href="#/home" class="text-gray-300 hover:text-purple-400" onclick="router['#/home']();">Accueil</a>
+            <a href="#/dashboard" class="text-gray-300 hover:text-purple-400" onclick="router['#/dashboard']();">Tableau de bord</a>
+            <a href="#/burn" class="text-gray-300 hover:text-purple-400" onclick="router['#/burn']();">Burn</a>
+            <a href="#/wheel" class="text-gray-300 hover:text-purple-400" onclick="router['#/wheel']();">Roue</a>
+            <a href="#/stake" class="text-gray-300 hover:text-purple-400" onclick="router['#/stake']();">Staking</a>
+            <a href="#/governance" class="text-gray-300 hover:text-purple-400" onclick="router['#/governance']();">Gouvernance</a>
+            <a href="#/my-status" class="text-gray-300 hover:text-purple-400" onclick="router['#/my-status']();">Mon statut</a>
         </div>
         <!-- Mobile Menu -->
         <div id="mobileMenu" class="absolute top-16 left-0 right-0 bg-gray-800 border-t border-gray-700 md:hidden hidden flex-col space-y-2 p-4">
