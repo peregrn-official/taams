@@ -2294,7 +2294,7 @@ const megaTestnet = {
   chainName: "Mega Testnet",
   nativeCurrency: {
     name: "MegaETH",
-    symbol: "MegaETH",
+    symbol: "METH",
     decimals: 18
   },
   rpcUrls: ["https://carrot.megaeth.com/rpc"],
