@@ -1,42 +1,94 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TAAMS - Staking, Gouvernance & Roue</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js" defer></script>
-    <script type="module" src="app.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TAAMS DApp</title>
+
+  <!-- ✅ Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- ✅ Ethers.js (bibliothèque Ethereum fiable) -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+  <!-- ✅ Correction moderne de la taille du texte pour tous les navigateurs -->
+  <style>
+    :host, html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+  </style>
+
+  <!-- ✅ Ton script principal -->
+  <script src="app.js"></script>
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
-    <!-- Navigation -->
-    <nav class="bg-gray-800 p-4 fixed w-full top-0 z-10 shadow-lg">
-        <!-- ... (votre code existant) ... -->
-    </nav>
+  <div class="container mx-auto px-4 py-8">
+    <header class="flex justify-between items-center mb-8">
+      <h1 class="text-3xl font-bold text-purple-400">TAAMS Platform</h1>
+      <div id="wallet-section" class="flex items-center space-x-4">
+        <button id="connect-wallet" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
+          Connect Wallet
+        </button>
+        <div id="wallet-info" class="hidden">
+          <span id="wallet-address" class="text-sm bg-gray-800 px-3 py-1 rounded-full"></span>
+        </div>
+      </div>
+    </header>
 
-    <!-- Sections de contenu -->
-    <main class="container mx-auto px-4 pt-24">
-        <!-- Section Wallet -->
-        <section id="wallet-section" class="py-8">
-            <!-- ... -->
-        </section>
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Section Wallet -->
+      <div class="bg-gray-800 p-6 rounded-xl">
+        <h2 class="text-xl font-semibold mb-4 text-purple-300">Wallet Info</h2>
+        <div id="wallet-details" class="space-y-2">
+          <p>Connect your wallet to interact with TAAMS</p>
+        </div>
+      </div>
 
-        <!-- Section Roue -->
-        <section id="wheel-section" class="py-8 text-center">
-            <h3 class="text-2xl font-semibold mb-6">Roue de la Fortune</h3>
-            <div class="flex justify-center">
-                <canvas id="wheel" width="300" height="300" 
-                        class="mb-4 bg-gray-800 rounded-full shadow-lg"></canvas>
-            </div>
-            <button id="spin-wheel" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg">
-                Tourner la Roue
-            </button>
-        </section>
+      <!-- Section Contrat -->
+      <div class="bg-gray-800 p-6 rounded-xl">
+        <h2 class="text-xl font-semibold mb-4 text-purple-300">Contract Info</h2>
+        <div class="space-y-4">
+          <div>
+            <p class="text-sm text-gray-400">Contract Address:</p>
+            <p class="text-sm break-all">0x087B3298Dc17D5f8982966844869a50095220698</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-400">Network:</p>
+            <p class="text-sm">Mega Testnet (6342)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section Fonctions -->
+      <div class="bg-gray-800 p-6 rounded-xl">
+        <h2 class="text-xl font-semibold mb-4 text-purple-300">Contract Functions</h2>
+        <div class="space-y-4">
+          <button id="get-balance" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
+            Get Balance
+          </button>
+          <button id="stake-btn" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
+            Stake Tokens
+          </button>
+          <button id="claim-rewards" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
+            Claim Rewards
+          </button>
+        </div>
+      </div>
     </main>
 
-    <!-- Modal -->
-    <div id="transaction-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-        <!-- ... -->
+    <!-- Modal pour les transactions -->
+    <div id="transaction-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+      <div class="bg-gray-800 p-6 rounded-xl max-w-md w-full">
+        <h3 class="text-xl font-semibold mb-4" id="modal-title">Transaction</h3>
+        <div id="modal-content" class="mb-4">
+          <p>Processing transaction...</p>
+        </div>
+        <button id="close-modal" class="w-full bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg">
+          Close
+        </button>
+      </div>
     </div>
+  </div>
 </body>
 </html>
