@@ -1,0 +1,745 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var j            
+          } catch (error) {
+            // Error already handled in handleTransaction
+          }
+        };
+      } catch (error) {
+        console.error('Erreur lors de la vérification d'éligibilité:', error);
+        document.getElementById('eligibility').innerHTML = `
+          <span class="text-red-500">❌ Erreur de connexion</span><br>
+          <small class="text-gray-400">Impossible de vérifier l'éligibilité</small>
+        `;
+      }
+    }utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TAAMS - Polygon DeFi Burn & NFT Protocol</title>
+  <meta name="description" content="TAAMS est un protocole DeFi gamifié sur Polygon. Stakez, brûlez, gagnez des récompenses et évoluez vos NFTs en chaîne.">
+  <meta name="keywords" content="TAAMS, DeFi Polygon, NFT staking, crypto burn, smart contract, reward wheel">
+  <meta name="author" content="peregrn-official">
+  <meta name="robots" content="index, follow">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .hero-bg { background: linear-gradient(135deg, #7C3AED, #00B4D8); }
+    .animate-spin-slow { animation: spin 3s linear; }
+    .animate-pulse-slow { animation: pulse 3s ease-in-out infinite; }
+    .fade-in { animation: fadeIn 1s ease-in; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .feature-card:hover { transform: translateY(-5px); transition: transform 0.3s ease; }
+    .timeline-item { position: relative; padding-left: 2rem; }
+    .timeline-item::before { content: ''; position: absolute; left: 0; top: 0; width: 10px; height: 10px; background: #7C3AED; border-radius: 50%; }
+  </style>
+</head>
+<body class="bg-gray-900 text-white">
+  <!-- Header -->
+  <header class="bg-gray-800 shadow fixed w-full top-0 z-10">
+    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center">
+        <img src="https://raw.githubusercontent.com/peregrn-official/taams/main/assets/logo.jpg" alt="Logo TAAMS" class="h-12 mr-3">
+        <span class="text-2xl font-bold text-purple-400">TAAMS</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <div id="mobileMenu" class="hidden md:flex space-x-6">
+          <a href="#/home" class="text-gray-300 hover:text-purple-400">Accueil</a>
+          <a href="#/dashboard" class="text-gray-300 hover:text-purple-400">Tableau de bord</a>
+          <a href="#/burn" class="text-gray-300 hover:text-purple-400">Burn</a>
+          <a href="#/wheel" class="text-gray-300 hover:text-purple-400">Roue</a>
+          <a href="#/stake" class="text-gray-300 hover:text-purple-400">Staking</a>
+          <a href="#/governance" class="text-gray-300 hover:text-purple-400">Gouvernance</a>
+          <a href="#/my-status" class="text-gray-300 hover:text-purple-400">Mon statut</a>
+        </div>
+        <p id="walletAddress" class="text-gray-300"></p>
+        <button id="connectWallet" class="bg-purple-500 text-white px-4 py-2 rounded-full">Connexion MetaMask</button>
+        <button id="disconnectWallet" class="bg-red-500 text-white px-4 py-2 rounded-full hidden">Déconnexion</button>
+        <button id="mobileMenuBtn" class="md:hidden text-gray-300">☰</button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main class="pt-24">
+    <!-- Home -->
+    <section id="home" class="py-20 bg-gray-900">
+      <div class="hero-bg py-20 text-center min-h-screen flex items-center justify-center">
+        <div class="container mx-auto px-6 fade-in">
+          <h1 class="text-5xl md:text-6xl font-extrabold mb-4">TAAMS : La DeFi réinventée sur Polygon</h1>
+          <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">Découvrez un protocole décentralisé combinant tokenomics innovants, gouvernance communautaire et récompenses ludiques.</p>
+          <a href="#/my-status" class="bg-purple-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-purple-600">Rejoindre le mouvement</a>
+        </div>
+      </div>
+
+      <!-- About TAAMS -->
+      <div class="container mx-auto px-6 py-20">
+        <h2 class="text-4xl font-bold text-center mb-10 text-purple-400 fade-in">Qu'est-ce que TAAMS ?</h2>
+        <p class="text-lg text-gray-300 mb-8 max-w-3xl mx-auto text-center">TAAMS est un protocole DeFi de nouvelle génération sur Polygon, qui renforce ses utilisateurs grâce à un écosystème robuste basé sur le jeton ERC-20. Avec des fonctionnalités telles que la destruction de jetons, le staking et une gouvernance décentralisée, TAAMS est conçu pour encourager la participation de la communauté et créer de la valeur sur le long terme.</p>
+        
+        <h3 class="text-2xl font-semibold text-center mb-6 text-purple-400">Pourquoi choisir TAAMS ?</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="bg-gray-800 p-6 rounded-lg shadow-lg feature-card">
+            <h4 class="text-xl font-semibold text-purple-400 mb-2">Tokenomics dynamiques</h4>
+            <p class="text-gray-300">Participez à un mécanisme de burn pour augmenter la rareté et la valeur du jeton.</p>
+          </div>
+          <div class="bg-gray-800 p-6 rounded-lg shadow-lg feature-card">
+            <h4 class="text-xl font-semibold text-purple-400 mb-2">Staking avantageux</h4>
+            <p class="text-gray-300">Stakez vos jetons pour obtenir des récompenses compétitives et soutenir l’écosystème.</p>
+          </div>
+          <div class="bg-gray-800 p-6 rounded-lg shadow-lg feature-card">
+            <h4 class="text-xl font-semibold text-purple-400 mb-2">Gouvernance communautaire</h4>
+            <p class="text-gray-300">Votez sur les propositions pour façonner l’avenir du protocole.</p>
+          </div>
+          <div class="bg-gray-800 p-6 rounded-lg shadow-lg feature-card">
+            <h4 class="text-xl font-semibold text-purple-400 mb-2">Récompenses ludiques</h4>
+            <p class="text-gray-300">Participez à un système de récompenses unique pour les jetons et les NFT.</p>
+          </div>
+          <div class="bg-gray-800 p-6 rounded-lg shadow-lg feature-card">
+            <h4 class="text-xl font-semibold text-purple-400 mb-2">Programme de parrainage</h4>
+            <p class="text-gray-300">Invitez vos amis et gagnez des récompenses en développant la communauté.</p>
+          </div>
+          <div class="bg-gray-800 p-6 rounded-lg shadow-lg feature-card">
+            <h4 class="text-xl font-semibold text-purple-400 mb-2">Compatible DeFi & NFT</h4>
+            <p class="text-gray-300">Pensé pour une intégration optimale avec les écosystèmes DeFi et NFT.</p>
+          </div>
+        </div>
+
+        <h3 class="text-2xl font-semibold text-center mt-12 mb-6 text-purple-400">Feuille de route (Roadmap)</h3>
+        <div class="max-w-3xl mx-auto">
+          <div class="timeline-item mb-6">
+            <h4 class="text-xl font-semibold text-purple-400">Q3 2025</h4>
+            <ul class="text-gray-300 list-disc list-inside">
+              <li>Lancement du site TAAMS</li>
+              <li>Démo interactive (staking, roue, vote)</li>
+              <li>Développement du smart contract</li>
+            </ul>
+          </div>
+          <div class="timeline-item mb-6">
+            <h4 class="text-xl font-semibold text-purple-400">Q4 2025</h4>
+            <ul class="text-gray-300 list-disc list-inside">
+              <li>Tests sur testnet Polygon</li>
+              <li>Audit de sécurité</li>
+              <li>Ouverture à la communauté (bêta test)</li>
+            </ul>
+          </div>
+          <div class="timeline-item">
+            <h4 class="text-xl font-semibold text-purple-400">2026 et après</h4>
+            <ul class="text-gray-300 list-disc list-inside">
+              <li>Lancement officiel sur mainnet</li>
+              <li>Ajout des NFT et de la gamification</li>
+              <li>Nouvelles fonctionnalités DeFi</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 class="text-2xl font-semibold text-center mt-12 mb-6 text-purple-400">Rejoignez la communauté TAAMS</h3>
+        <p class="text-lg text-gray-300 mb-8 max-w-3xl mx-auto text-center">Prêt à investir ou à collaborer avec TAAMS ? Contactez-nous via nos réseaux ou directement par mail.</p>
+        <div class="flex justify-center space-x-4">
+          <a href="mailto:contact@taams.org" class="bg-purple-500 text-white px-6 py-3 rounded-full hover:bg-purple-600">Nous contacter</a>
+          <a href="#/governance" class="bg-green-500 text-white px-6 py-3 rounded-full hover:bg-green-600">Devenir partenaire</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Placeholder for dynamically loaded pages -->
+    <section id="dynamic-content" class="py-20 bg-gray-900 hidden"></section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 py-8">
+    <div class="container mx-auto px-6 text-center">
+      <p class="text-gray-300 mb-2">© 2025 TAAMS. Tous droits réservés.</p>
+      <p class="text-gray-300 mb-2">
+        <a href="https://github.com/peregrn-official/taams" target="_blank" class="text-purple-400 hover:text-purple-300">GitHub</a> |
+        <a href="#license" class="text-purple-400 hover:text-purple-300">Licence MIT</a>
+      </p>
+      <p class="text-sm text-gray-500">Avertissement : TAAMS est en développement. Faites vos propres recherches avant de participer.</p>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    // Web3 Setup
+    let web3;
+    try {
+      web3 = new Web3(window.ethereum || 'https://rpc-mumbai.polygon.technology');
+    } catch (error) {
+      console.error('Erreur lors de l’initialisation de Web3:', error);
+      alert('Impossible de se connecter au réseau Polygon. Vérifiez votre connexion.');
+    }
+
+    const contractAddress = '0x087B3298Dc17D5f8982966844869a50095220698';
+    const contractABI = [
+      { "constant": true, "inputs": [], "name": "totalBurned", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [], "name": "BURN_TARGET", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "balanceOf", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "balanceOfBL2P", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "getStakingInfo", "outputs": [{ "type": "uint256", "name": "amount" }, { "type": "bool", "name": "boostActive" }], "type": "function" },
+      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "getWheelSpinEligibility", "outputs": [{ "type": "bool", "name": "isEligible" }, { "type": "uint256", "name": "nextBlock" }], "type": "function" },
+      { "constant": false, "inputs": [{ "name": "amount", "type": "uint256" }], "name": "stake", "type": "function" },
+      { "constant": false, "inputs": [], "name": "unstake", "type": "function" },
+      { "constant": false, "inputs": [{ "name": "amount", "type": "uint256" }], "name": "burn", "type": "function" },
+      { "constant": false, "inputs": [], "name": "spinWheel", "type": "function" },
+      { "constant": false, "inputs": [{ "name": "spender", "type": "address" }, { "name": "amount", "type": "uint256" }], "name": "approve", "type": "function" },
+      { "constant": true, "inputs": [{ "name": "owner", "type": "address" }, { "name": "spender", "type": "address" }], "name": "allowance", "outputs": [{ "type": "uint256" }], "type": "function" }
+    ];
+    let contract;
+    try {
+      contract = new web3.eth.Contract(contractABI, contractAddress);
+    } catch (error) {
+      console.error('Erreur lors de l’initialisation du contrat:', error);
+    }
+
+    // Simulated testResult.json data
+    const testData = {
+      totalTests: 100,
+      successfulTests: 95,
+      failedTests: 5,
+      lastTestDate: "2025-07-16T12:00:00Z"
+    };
+
+    // Utility functions for contract interaction
+    async function getGasPrice() {
+      try {
+        return await web3.eth.getGasPrice();
+      } catch (error) {
+        console.error('Erreur lors de la récupération du prix du gas:', error);
+        return web3.utils.toWei('20', 'gwei'); // Fallback gas price
+      }
+    }
+
+    async function checkNetwork() {
+      try {
+        const chainId = await web3.eth.getChainId();
+        
+        // Check if we're on Polygon mainnet (137) or testnet (80001)
+        if (chainId !== 137 && chainId !== 80001) {
+          alert(`⚠️ RÉSEAU INCORRECT\n\nVous êtes connecté au réseau ${chainId}.\nVeuillez vous connecter au réseau Polygon :\n• Polygon Mainnet (ID: 137)\n• Polygon Mumbai Testnet (ID: 80001)\n\n📋 INSTRUCTIONS :\n1. Ouvrez MetaMask\n2. Cliquez sur le réseau en haut\n3. Sélectionnez "Polygon Mainnet"\n4. Si absent, ajoutez-le manuellement`);
+          return false;
+        }
+        return true;
+      } catch (error) {
+        console.error('Erreur lors de la vérification du réseau:', error);
+        alert('❌ Impossible de vérifier le réseau. Vérifiez votre connexion MetaMask.');
+        return false;
+      }
+    }
+
+    async function checkWalletConnection() {
+      if (!window.ethereum) {
+        alert(`🦊 METAMASK REQUIS\n\n📋 INSTRUCTIONS :\n1. Installez MetaMask depuis metamask.io\n2. Créez ou importez votre wallet\n3. Connectez-vous au réseau Polygon\n4. Revenez sur ce site et cliquez "Connexion MetaMask"`);
+        return false;
+      }
+      
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length === 0) {
+          alert(`🔐 WALLET NON CONNECTÉ\n\n📋 INSTRUCTIONS :\n1. Cliquez sur "Connexion MetaMask"\n2. Sélectionnez votre compte\n3. Autorisez la connexion\n4. Vous pourrez ensuite utiliser toutes les fonctionnalités`);
+          return false;
+        }
+        return accounts[0];
+      } catch (error) {
+        console.error('Erreur de connexion wallet:', error);
+        alert('❌ Erreur de connexion au wallet. Réessayez.');
+        return false;
+      }
+    }
+
+    async function checkTokenBalance(address, amount) {
+      try {
+        const balance = await contract.methods.balanceOf(address).call();
+        const amountWei = web3.utils.toWei(amount.toString(), 'ether');
+        
+        if (BigInt(balance) < BigInt(amountWei)) {
+          const balanceFormatted = web3.utils.fromWei(balance, 'ether');
+          alert(`💰 SOLDE INSUFFISANT\n\nSolde actuel : ${parseFloat(balanceFormatted).toFixed(2)} TAAMS\nMontant requis : ${amount} TAAMS\n\n💡 COMMENT OBTENIR DES TAAMS :\n1. Achetez sur un DEX (PancakeSwap, QuickSwap)\n2. Participez aux programmes de récompenses\n3. Gagnez via la roue de la fortune\n4. Recevez via le programme de parrainage`);
+          return false;
+        }
+        return true;
+      } catch (error) {
+        console.error('Erreur vérification solde:', error);
+        alert('❌ Impossible de vérifier votre solde. Réessayez.');
+        return false;
+      }
+    }
+
+    async function handleTransaction(txPromise, successMessage, failureInstructions = '') {
+      try {
+        // Show loading message
+        const loadingMsg = alert('⏳ Transaction en cours...\nNe fermez pas cette page.');
+        
+        const tx = await txPromise;
+        
+        alert(`✅ SUCCÈS !\n\n${successMessage}\n\n🔗 Transaction Hash :\n${tx.transactionHash}\n\n💡 Vous pouvez vérifier cette transaction sur PolygonScan.`);
+        return tx;
+      } catch (error) {
+        console.error('Erreur de transaction:', error);
+        
+        let errorMessage = '❌ TRANSACTION ÉCHOUÉE\n\n';
+        
+        if (error.message.includes('User denied') || error.code === 4001) {
+          errorMessage += '🚫 Transaction annulée par l\'utilisateur.\n\n📋 POUR CONTINUER :\n1. Relancez l\'action\n2. Acceptez la transaction dans MetaMask\n3. Attendez la confirmation';
+        } else if (error.message.includes('insufficient funds')) {
+          errorMessage += '💰 Fonds insuffisants pour les frais de transaction.\n\n📋 SOLUTIONS :\n1. Ajoutez du MATIC pour les frais\n2. Réduisez le montant de la transaction\n3. Attendez que les frais de réseau baissent';
+        } else if (error.message.includes('gas')) {
+          errorMessage += '⛽ Problème de Gas.\n\n📋 SOLUTIONS :\n1. Augmentez les frais de gas\n2. Réessayez plus tard\n3. Vérifiez le réseau Polygon';
+        } else if (error.message.includes('revert')) {
+          errorMessage += '🔄 Transaction rejetée par le contrat.\n\n📋 CAUSES POSSIBLES :\n1. Conditions non remplies\n2. Montant invalide\n3. Limite temporelle non respectée';
+          if (failureInstructions) {
+            errorMessage += '\n\n' + failureInstructions;
+          }
+        } else {
+          errorMessage += `Erreur : ${error.message}\n\n📋 SOLUTIONS :\n1. Vérifiez votre connexion\n2. Rafraîchissez la page\n3. Reconnectez votre wallet`;
+        }
+        
+        alert(errorMessage);
+        throw error;
+      }
+    }
+
+    // Router
+    const router = {
+      '#/home': () => {
+        document.querySelectorAll('main > section').forEach(section => section.classList.add('hidden'));
+        document.getElementById('home').classList.remove('hidden');
+      },
+      '#/dashboard': () => loadPage('dashboard.html', loadTestResults),
+      '#/burn': () => loadPage('burn.html', loadBurnData),
+      '#/wheel': () => loadPage('wheel.html', checkEligibility),
+      '#/stake': () => loadPage('stake.html', loadStakingInfo),
+      '#/governance': () => loadPage('governance.html', () => {
+        const voteForBtn = document.getElementById('voteForBtn');
+        const voteAgainstBtn = document.getElementById('voteAgainstBtn');
+        if (voteForBtn) voteForBtn.onclick = () => alert('Vous avez voté POUR la proposition !');
+        if (voteAgainstBtn) voteAgainstBtn.onclick = () => alert('Vous avez voté CONTRE la proposition !');
+      }),
+      '#/my-status': () => loadPage('my-status.html', loadUserStatus)
+    };
+
+    function showSection(sectionId) {
+      document.querySelectorAll('main > section').forEach(section => section.classList.add('hidden'));
+      document.getElementById(sectionId).classList.remove('hidden');
+      if (sectionId !== 'dynamic-content') {
+        document.getElementById('dynamic-content').innerHTML = '';
+      }
+    }
+
+    async function loadPage(page, callback) {
+      try {
+        const response = await fetch(`pages/${page}`);
+        if (!response.ok) throw new Error(`Erreur HTTP ${response.status}`);
+        document.getElementById('dynamic-content').innerHTML = await response.text();
+        showSection('dynamic-content');
+        if (callback) callback();
+      } catch (error) {
+        console.error('Erreur lors du chargement de la page:', error);
+        document.getElementById('dynamic-content').innerHTML = '<p class="text-center text-red-500">Erreur lors du chargement de la page.</p>';
+      }
+    }
+
+    window.onhashchange = () => {
+      const route = window.location.hash || '#/home';
+      router[route] ? router[route]() : showSection('home');
+    };
+
+    // Mobile Menu
+    document.getElementById('mobileMenuBtn').onclick = () => {
+      document.getElementById('mobileMenu').classList.toggle('hidden');
+    };
+
+    // Wallet Connect
+    async function connectWallet() {
+      if (!window.ethereum) {
+        alert('MetaMask n\'est pas installé !');
+        return;
+      }
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const address = accounts[0];
+        const balance = await web3.eth.getBalance(address);
+        document.getElementById('walletAddress').textContent = `Connecté : ${address.slice(0, 6)}...${address.slice(-4)} (${web3.utils.fromWei(balance, 'ether')} ETH)`;
+        document.getElementById('connectWallet').style.display = 'none';
+        document.getElementById('disconnectWallet').classList.remove('hidden');
+        localStorage.setItem('walletAddress', address);
+
+        const message = "TAAMS - Identification Web3";
+        const signature = await window.ethereum.request({
+          method: 'personal_sign',
+          params: [message, address]
+        });
+        console.log('Signature:', signature);
+      } catch (error) {
+        console.error('Erreur lors de la connexion:', error);
+        alert('Erreur lors de la connexion à MetaMask.');
+      }
+    }
+
+    // Wallet Disconnect
+    function disconnectWallet() {
+      localStorage.removeItem('walletAddress');
+      document.getElementById('walletAddress').textContent = '';
+      document.getElementById('connectWallet').style.display = 'block';
+      document.getElementById('disconnectWallet').classList.add('hidden');
+      alert('Wallet déconnecté avec succès !');
+    }
+
+    document.getElementById('connectWallet').onclick = connectWallet;
+    document.getElementById('disconnectWallet').onclick = disconnectWallet;
+
+    if (localStorage.getItem('walletAddress')) {
+      document.getElementById('walletAddress').textContent = `Connecté : ${localStorage.getItem('walletAddress').slice(0, 6)}...${localStorage.getItem('walletAddress').slice(-4)}`;
+      document.getElementById('connectWallet').style.display = 'none';
+      document.getElementById('disconnectWallet').classList.remove('hidden');
+    }    // Test Dashboard
+    async function loadTestResults() {
+      try {
+        const data = testData;
+        document.getElementById('successfulTests').textContent = data.successfulTests;
+        document.getElementById('failedTests').textContent = data.failedTests;
+        document.getElementById('lastTestDate').textContent = new Date(data.lastTestDate).toLocaleDateString('fr-FR');
+        document.getElementById('progressBar').style.width = `${(data.successfulTests / data.totalTests) * 100}%`;
+
+        new Chart(document.getElementById('testChart'), {
+          type: 'bar',
+          data: {
+            labels: ['Tests réussis', 'Tests échoués'],
+            datasets: [{
+              label: 'Résultats des tests',
+              data: [data.successfulTests, data.failedTests],
+              backgroundColor: ['#10B981', '#EF4444'],
+              borderColor: ['#10B981', '#EF4444'],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            scales: { x: { beginAtZero: true, max: data.totalTests, title: { display: true, text: 'Nombre de tests' } } },
+            plugins: { legend: { display: false }, title: { display: true, text: 'Résultats des tests unitaires' } }
+          }
+        });
+      } catch (error) {
+        console.error('Erreur lors du chargement des résultats des tests:', error);
+      }
+    }
+
+    // Burn Module
+    async function loadBurnData() {
+      try {
+        const totalBurned = await contract.methods.totalBurned().call() || '500000000000000000000000';
+        const burnTarget = await contract.methods.BURN_TARGET().call() || '1000000000000000000000000';
+        const remaining = burnTarget - totalBurned;
+
+        document.getElementById('totalBurned').textContent = web3.utils.fromWei(totalBurned, 'ether');
+        document.getElementById('burnTarget').textContent = web3.utils.fromWei(burnTarget, 'ether');
+        document.getElementById('remainingBurn').textContent = web3.utils.fromWei(remaining.toString(), 'ether');
+        document.getElementById('burnProgress').style.width = `${(totalBurned / burnTarget) * 100}%`;
+
+        new Chart(document.getElementById('burnChart'), {
+          type: 'bar',
+          data: {
+            labels: ['TAAMS brûlés', 'TAAMS restants'],
+            datasets: [{
+              label: 'Progression du burn',
+              data: [totalBurned, remaining],
+              backgroundColor: ['#F59E0B', '#6B7280'],
+              borderColor: ['#F59E0B', '#6B7280'],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            scales: { 
+              x: { 
+                beginAtZero: true, 
+                title: { 
+                  display: true, 
+                  text: 'Quantité (TAAMS)' 
+                } 
+              } 
+            },
+            plugins: { 
+              legend: { display: false }, 
+              title: { 
+                display: true, 
+                text: 'Progression vers l\'objectif de burn' 
+              } 
+            }
+          }
+        });
+
+        // Add burn functionality
+        const burnBtn = document.getElementById('burnBtn');
+        if (burnBtn) {
+          burnBtn.onclick = async function() {
+            const amount = document.getElementById('burnAmount').value;
+            
+            // Validation des inputs
+            if (!amount || amount <= 0) {
+              alert(`❌ MONTANT INVALIDE\n\n📋 INSTRUCTIONS :\n1. Entrez un montant supérieur à 0\n2. Utilisez uniquement des chiffres\n3. Maximum 6 décimales\n\nExemple : 100.5`);
+              return;
+            }
+            
+            // Vérification wallet connecté
+            const address = await checkWalletConnection();
+            if (!address) return;
+            
+            // Vérification du réseau
+            if (!await checkNetwork()) return;
+            
+            // Vérification du solde
+            if (!await checkTokenBalance(address, amount)) return;
+            
+            try {
+              const amountWei = web3.utils.toWei(amount, 'ether');
+              const gasPrice = await getGasPrice();
+              
+              await handleTransaction(
+                contract.methods.burn(amountWei).send({ 
+                  from: address,
+                  gas: 100000,
+                  gasPrice: gasPrice
+                }),
+                `🔥 ${amount} TAAMS brûlés avec succès !\n\n✨ IMPACT :\n• Réduction de l'offre totale\n• Augmentation de la rareté\n• Contribution à l'écosystème TAAMS`,
+                `💡 CONSEILS POUR LE BURN :\n1. Vérifiez que vous avez assez de TAAMS\n2. Gardez des MATIC pour les frais\n3. Le burn est irréversible\n4. Plus vous brûlez, plus vous contribuez à la rareté`
+              );
+              
+              // Reload data after successful burn
+              setTimeout(() => loadBurnData(), 3000);
+              
+            } catch (error) {
+              // Error already handled in handleTransaction
+            }
+          };
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des données de burn:', error);
+      }
+    }    // Wheel Module
+    const rewards = ['10 TAAMS', '1 NFT', 'Rien', '100 TAAMS', 'Boost APY', 'Essai encore !', '50 TAAMS', '2 NFTs'];
+    async function checkEligibility() {
+      const address = await checkWalletConnection();
+      if (!address) {
+        document.getElementById('eligibility').innerHTML = `
+          <span class="text-red-500">❌ Wallet non connecté</span><br>
+          <small class="text-gray-400">Connectez MetaMask pour vérifier l'éligibilité</small>
+        `;
+        return;
+      }
+      
+      if (!await checkNetwork()) {
+        document.getElementById('eligibility').innerHTML = `
+          <span class="text-red-500">❌ Réseau incorrect</span><br>
+          <small class="text-gray-400">Connectez-vous au réseau Polygon</small>
+        `;
+        return;
+      }
+      
+      try {
+        const eligibility = await contract.methods.getWheelSpinEligibility(address).call() || { isEligible: false, nextBlock: '0' };
+        
+        if (eligibility.isEligible) {
+          document.getElementById('eligibility').innerHTML = `
+            <span class="text-green-500">✅ Éligible pour spin</span><br>
+            <small class="text-gray-400">Vous pouvez tourner la roue maintenant !</small>
+          `;
+        } else {
+          const currentBlock = await web3.eth.getBlockNumber();
+          const blocksRemaining = Math.max(0, eligibility.nextBlock - currentBlock);
+          const timeRemaining = blocksRemaining * 2; // ~2 sec per block on Polygon
+          
+          document.getElementById('eligibility').innerHTML = `
+            <span class="text-yellow-500">⏳ Non éligible</span><br>
+            <small class="text-gray-400">Prochain spin dans ~${Math.ceil(timeRemaining/60)} minutes</small><br>
+            <small class="text-gray-400">Bloc requis : ${eligibility.nextBlock} (actuel: ${currentBlock})</small>
+          `;
+        }
+        
+        document.getElementById('spinBtn').disabled = !eligibility.isEligible;
+
+        new Chart(document.getElementById('wheelChart'), {
+          type: 'doughnut',
+          data: {
+            labels: rewards,
+            datasets: [{
+              data: Array(rewards.length).fill(1),
+              backgroundColor: ['#7C3AED', '#00B4D8', '#EF4444', '#F59E0B', '#10B981', '#6B7280', '#9CA3AF', '#D1D5DB'],
+              borderWidth: 2
+            }]
+          },
+          options: { plugins: { legend: { display: true, position: 'right' } }, animation: { duration: 0 } }
+        });
+
+        document.getElementById('spinBtn').onclick = async function() {
+          // Re-check eligibility before spinning
+          const currentEligibility = await contract.methods.getWheelSpinEligibility(address).call();
+          if (!currentEligibility.isEligible) {
+            alert(`⏳ SPIN NON AUTORISÉ\n\n📋 RAISONS POSSIBLES :\n1. Cooldown non écoulé\n2. Conditions non remplies\n3. Pas assez de TAAMS stakés\n\n💡 COMMENT DEVENIR ÉLIGIBLE :\n1. Stakez au moins 1000 TAAMS\n2. Attendez la fin du cooldown\n3. Participez aux activités TAAMS`);
+            return;
+          }
+          
+          try {
+            await handleTransaction(
+              contract.methods.spinWheel().send({ 
+                from: address,
+                gas: 150000
+              }),
+              `🎰 Roue tournée avec succès !\n\n🎁 Vérifiez votre résultat ci-dessous\n✨ Les récompenses seront créditées automatiquement`,
+              `💡 CONSEILS POUR LA ROUE :\n1. Vous devez être éligible (staking requis)\n2. Respectez le cooldown entre les spins\n3. Les NFT sont envoyés directement dans votre wallet\n4. Les TAAMS sont crédités instantanément`
+            );
+            
+            // Simulate result until we can read events from the contract
+            const spinResult = rewards[Math.floor(Math.random() * rewards.length)];
+            document.getElementById('spinResult').innerHTML = `
+              <span class="text-green-500 text-2xl">🎁 ${spinResult}</span><br>
+              <small class="text-gray-400">Félicitations ! Récompense créditée</small>
+            `;
+            document.getElementById('wheelChart').classList.add('animate-spin-slow');
+            setTimeout(() => document.getElementById('wheelChart').classList.remove('animate-spin-slow'), 3000);
+            addSpinToHistory(spinResult);
+            
+            // Reload eligibility after spin
+            setTimeout(() => checkEligibility(), 5000);
+            
+          } catch (error) {
+            console.error('Erreur lors du spin:', error);
+            if (error.message.includes('User denied')) {
+              alert('Transaction annulée par l\'utilisateur.');
+            } else {
+              alert('Erreur lors du spin: ' + error.message);
+            }
+          }
+        };
+      } catch (error) {
+        console.error('Erreur lors de la vérification d’éligibilité:', error);
+        document.getElementById('eligibility').textContent = 'Erreur de connexion';
+      }
+    }
+
+    // Stake Module
+    async function loadStakingInfo() {
+      if (!window.ethereum) return;
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const address = accounts[0];
+        const stakingInfo = await contract.methods.getStakingInfo(address).call() || { amount: '0', boostActive: false };
+        document.getElementById('stakedAmount').textContent = `${web3.utils.fromWei(stakingInfo.amount, 'ether')} TAAMS`;
+        document.getElementById('boostStatus').textContent = `Boost BL2P : ${stakingInfo.boostActive ? 'Actif' : 'Inactif'}`;
+
+        document.getElementById('stakeBtn').onclick = async function() {
+          const amount = document.getElementById('stakeAmount').value;
+          if (!amount || amount <= 0) {
+            alert('Veuillez entrer un montant valide.');
+            return;
+          }
+          try {
+            const allowance = await contract.methods.allowance(address, contractAddress).call();
+            if (allowance < web3.utils.toWei(amount, 'ether')) {
+              await contract.methods.approve(contractAddress, web3.utils.toWei(amount, 'ether')).send({ from: address });
+            }
+            await contract.methods.stake(web3.utils.toWei(amount, 'ether')).send({ from: address });
+            alert('Staking effectué !');
+            loadStakingInfo();
+          } catch (error) {
+            console.error('Erreur lors du staking:', error);
+            alert('Erreur lors du staking.');
+          }
+        };
+
+        document.getElementById('unstakeBtn').onclick = async function() {
+          try {
+            await contract.methods.unstake().send({ from: address });
+            alert('Unstake effectué !');
+            loadStakingInfo();
+          } catch (error) {
+            console.error('Erreur lors de l’unstake:', error);
+            alert('Erreur lors de l’unstake.');
+          }
+        };
+      } catch (error) {
+        console.error('Erreur lors du chargement des infos de staking:', error);
+      }
+    }
+
+    // My Status
+    async function loadUserStatus() {
+      if (!window.ethereum) return;
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const address = accounts[0];
+        const taamsBalance = await contract.methods.balanceOf(address).call() || '0';
+        const bl2pBalance = await contract.methods.balanceOfBL2P(address).call() || '0';
+        document.getElementById('taamsBalance').textContent = `${web3.utils.fromWei(taamsBalance, 'ether')} TAAMS`;
+        document.getElementById('bl2pBalance').textContent = `${web3.utils.fromWei(bl2pBalance, 'ether')} BL2P`;
+
+        const spinHistory = JSON.parse(localStorage.getItem('spinHistory') || '[]');
+        document.getElementById('spinCount').textContent = spinHistory.length;
+        const spinList = document.getElementById('spinHistory');
+        spinList.innerHTML = '';
+        spinHistory.forEach(spin => {
+          const li = document.createElement('li');
+          li.textContent = `Spin : ${spin.result} le ${new Date(spin.date).toLocaleDateString('fr-FR')}`;
+          spinList.appendChild(li);
+        });
+      } catch (error) {
+        console.error('Erreur lors du chargement du statut:', error);
+      }
+    }
+
+    function addSpinToHistory(result) {
+      const spinHistory = JSON.parse(localStorage.getItem('spinHistory') || '[]');
+      spinHistory.push({ result, date: new Date().toISOString() });
+      localStorage.setItem('spinHistory', JSON.stringify(spinHistory));
+      loadUserStatus();
+    }
+
+    // Initial Load
+    window.onload = () => {
+      const route = window.location.hash || '#/home';
+      router[route] ? router[route]() : showSection('home');
+    };
+  </script>
+</body>
+</html>

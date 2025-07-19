@@ -1,0 +1,46 @@
+# 🔐 Secrets
+.env
+TAAMS_ABI.sol
+# ⚙️ Hardhat & backend
+hardhat.config.js
+TAAMScontract.sol
+scripts/
+artifacts/
+cache/
+coverage/
+typechain/
+typechain-types/
+ignition/
+test/
+coverage.json
+*.tsbuildinfo
+
+# 📦 Dépendances
+node_modules/
+
+# 🎨 Tailwind source
+src/
+tailwind.config.js
+output.css
+
+# 🏗️ Build
+dist/
+build/
+.cache/
+
+# 🧠 IDE & système
+.vscode/
+.DS_Store
+Thumbs.db
+
+# 🪵 Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 📄 Fichiers à ne pas publier
+package-lock.json
+manifest.json
+service-worker.js
+icon.png

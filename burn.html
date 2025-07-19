@@ -1,0 +1,81 @@
+<!-- Burn Page Content -->
+<div class="container mx-auto px-6 py-20">
+  <h1 class="text-4xl font-bold text-center mb-10 text-purple-400">🔥 Mécanisme de Burn TAAMS</h1>
+  
+  <!-- Burn Statistics -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+      <h3 class="text-2xl font-semibold text-orange-400 mb-2">TAAMS Brûlés</h3>
+      <p id="totalBurned" class="text-3xl font-bold text-white">500,000</p>
+      <p class="text-gray-400">Total détruit à vie</p>
+    </div>
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+      <h3 class="text-2xl font-semibold text-orange-400 mb-2">Objectif de Burn</h3>
+      <p id="burnTarget" class="text-3xl font-bold text-white">1,000,000</p>
+      <p class="text-gray-400">Cible communautaire</p>
+    </div>
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+      <h3 class="text-2xl font-semibold text-orange-400 mb-2">Restant à Brûler</h3>
+      <p id="remainingBurn" class="text-3xl font-bold text-white">500,000</p>
+      <p class="text-gray-400">Tokens restants</p>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-12">
+    <h3 class="text-xl font-semibold text-orange-400 mb-4">Progression vers l'objectif</h3>
+    <div class="w-full bg-gray-700 rounded-full h-4">
+      <div id="burnProgress" class="bg-orange-500 h-4 rounded-full transition-all duration-500" style="width: 50%"></div>
+    </div>
+    <p class="text-gray-400 mt-2 text-center">50% de l'objectif atteint</p>
+  </div>
+
+  <!-- Burn Chart -->
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-12">
+    <h3 class="text-xl font-semibold text-orange-400 mb-4">Visualisation du Burn</h3>
+    <canvas id="burnChart" width="400" height="200"></canvas>
+  </div>
+
+  <!-- Burn Actions -->
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+    <h3 class="text-xl font-semibold text-orange-400 mb-4">Participer au Burn</h3>
+    <p class="text-gray-300 mb-6">Brûlez vos tokens TAAMS pour réduire l'offre totale et augmenter la valeur de l'écosystème.</p>
+    
+    <div class="flex flex-col md:flex-row gap-4 items-end">
+      <div class="flex-1">
+        <label for="burnAmount" class="block text-sm font-medium text-gray-400 mb-2">Montant à brûler</label>
+        <input type="number" id="burnAmount" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white" placeholder="0.0" min="0" step="0.1">
+      </div>
+      <button id="burnBtn" class="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors">
+        🔥 Brûler les Tokens
+      </button>
+    </div>
+    
+    <p class="text-sm text-gray-500 mt-4">
+      ⚠️ Attention : Les tokens brûlés sont définitivement détruits et ne peuvent pas être récupérés.
+    </p>
+  </div>
+
+  <!-- Benefits of Burning -->
+  <div class="mt-12">
+    <h3 class="text-2xl font-semibold text-center mb-6 text-orange-400">Pourquoi brûler vos TAAMS ?</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+        <h4 class="text-xl font-semibold text-orange-400 mb-2">🚀 Augmentation de la valeur</h4>
+        <p class="text-gray-300">En réduisant l'offre totale, chaque token restant devient plus rare et potentiellement plus précieux.</p>
+      </div>
+      <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+        <h4 class="text-xl font-semibold text-orange-400 mb-2">🏆 Récompenses spéciales</h4>
+        <p class="text-gray-300">Les participants au burn reçoivent des NFT commémoratifs et des bonus dans la gouvernance.</p>
+      </div>
+      <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+        <h4 class="text-xl font-semibold text-orange-400 mb-2">🌟 Impact communautaire</h4>
+        <p class="text-gray-300">Votre contribution renforce l'écosystème TAAMS et démontre votre engagement à long terme.</p>
+      </div>
+      <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+        <h4 class="text-xl font-semibold text-orange-400 mb-2">📈 Tokenomics saines</h4>
+        <p class="text-gray-300">Le burn maintient une pression déflationniste qui bénéficie à tous les détenteurs.</p>
+      </div>
+    </div>
+  </div>
+</div>
