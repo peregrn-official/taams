@@ -1,62 +1,11 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var j            
-          } catch (error) {
-            // Error already handled in handleTransaction
-          }
-        };
-      } catch (error) {
-        console.error('Erreur lors de la vérification d'éligibilité:', error);
-        document.getElementById('eligibility').innerHTML = `
-          <span class="text-red-500">❌ Erreur de connexion</span><br>
-          <small class="text-gray-400">Impossible de vérifier l'éligibilité</small>
-        `;
-      }
-    }utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TAAMS - Polygon DeFi Burn & NFT Protocol</title>
-  <meta name="description" content="TAAMS est un protocole DeFi gamifié sur Polygon. Stakez, brûlez, gagnez des récompenses et évoluez vos NFTs en chaîne.">
-  <meta name="keywords" content="TAAMS, DeFi Polygon, NFT staking, crypto burn, smart contract, reward wheel">
+  <title>TAAMS - DeFi Protocol (Testnet) - Blockchain finale à déterminer</title>
+  <meta name="description" content="TAAMS est un protocole DeFi gamifié sur Mega Testnet. Stakez, brûlez, gagnez des récompenses et évoluez vos NFTs en chaîne.">
+  <meta name="keywords" content="TAAMS, DeFi Mega, NFT staking, crypto burn, smart contract, reward wheel">
   <meta name="author" content="peregrn-official">
   <meta name="robots" content="index, follow">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -75,6 +24,7 @@
     .feature-card:hover { transform: translateY(-5px); transition: transform 0.3s ease; }
     .timeline-item { position: relative; padding-left: 2rem; }
     .timeline-item::before { content: ''; position: absolute; left: 0; top: 0; width: 10px; height: 10px; background: #7C3AED; border-radius: 50%; }
+    .help-box { background: linear-gradient(135deg, #1F2937, #374151); border-left: 4px solid #7C3AED; }
   </style>
 </head>
 <body class="bg-gray-900 text-white">
@@ -86,7 +36,8 @@
         <span class="text-2xl font-bold text-purple-400">TAAMS</span>
       </div>
       <div class="flex items-center space-x-4">
-        <div id="mobileMenu" class="hidden md:flex space-x-6">
+        <!-- Desktop Menu -->
+        <div class="hidden md:flex space-x-6">
           <a href="#/home" class="text-gray-300 hover:text-purple-400">Accueil</a>
           <a href="#/dashboard" class="text-gray-300 hover:text-purple-400">Tableau de bord</a>
           <a href="#/burn" class="text-gray-300 hover:text-purple-400">Burn</a>
@@ -94,6 +45,16 @@
           <a href="#/stake" class="text-gray-300 hover:text-purple-400">Staking</a>
           <a href="#/governance" class="text-gray-300 hover:text-purple-400">Gouvernance</a>
           <a href="#/my-status" class="text-gray-300 hover:text-purple-400">Mon statut</a>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="absolute top-16 left-0 right-0 bg-gray-800 border-t border-gray-700 md:hidden hidden flex-col space-y-2 p-4">
+          <a href="#/home" class="text-gray-300 hover:text-purple-400 block py-2" onclick="router['#/home']();">Accueil</a>
+          <a href="#/dashboard" class="text-gray-300 hover:text-purple-400 block py-2" onclick="router['#/dashboard']();">Tableau de bord</a>
+          <a href="#/burn" class="text-gray-300 hover:text-purple-400 block py-2" onclick="router['#/burn']();">Burn</a>
+          <a href="#/wheel" class="text-gray-300 hover:text-purple-400 block py-2" onclick="router['#/wheel']();">Roue</a>
+          <a href="#/stake" class="text-gray-300 hover:text-purple-400 block py-2" onclick="router['#/stake']();">Staking</a>
+          <a href="#/governance" class="text-gray-300 hover:text-purple-400 block py-2" onclick="router['#/governance']();">Gouvernance</a>
+          <a href="#/my-status" class="text-gray-300 hover:text-purple-400 block py-2" onclick="router['#/my-status']();">Mon statut</a>
         </div>
         <p id="walletAddress" class="text-gray-300"></p>
         <button id="connectWallet" class="bg-purple-500 text-white px-4 py-2 rounded-full">Connexion MetaMask</button>
@@ -109,7 +70,7 @@
     <section id="home" class="py-20 bg-gray-900">
       <div class="hero-bg py-20 text-center min-h-screen flex items-center justify-center">
         <div class="container mx-auto px-6 fade-in">
-          <h1 class="text-5xl md:text-6xl font-extrabold mb-4">TAAMS : La DeFi réinventée sur Polygon</h1>
+          <h1 class="text-5xl md:text-6xl font-extrabold mb-4">TAAMS : La DeFi réinventée sur Mega Testnet</h1>
           <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">Découvrez un protocole décentralisé combinant tokenomics innovants, gouvernance communautaire et récompenses ludiques.</p>
           <a href="#/my-status" class="bg-purple-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-purple-600">Rejoindre le mouvement</a>
         </div>
@@ -118,8 +79,43 @@
       <!-- About TAAMS -->
       <div class="container mx-auto px-6 py-20">
         <h2 class="text-4xl font-bold text-center mb-10 text-purple-400 fade-in">Qu'est-ce que TAAMS ?</h2>
-        <p class="text-lg text-gray-300 mb-8 max-w-3xl mx-auto text-center">TAAMS est un protocole DeFi de nouvelle génération sur Polygon, qui renforce ses utilisateurs grâce à un écosystème robuste basé sur le jeton ERC-20. Avec des fonctionnalités telles que la destruction de jetons, le staking et une gouvernance décentralisée, TAAMS est conçu pour encourager la participation de la communauté et créer de la valeur sur le long terme.</p>
+        <p class="text-lg text-gray-300 mb-8 max-w-3xl mx-auto text-center">TAAMS est un protocole DeFi de nouvelle génération sur Mega Testnet, qui renforce ses utilisateurs grâce à un écosystème robuste basé sur le jeton ERC-20. Avec des fonctionnalités telles que la destruction de jetons, le staking et une gouvernance décentralisée, TAAMS est conçu pour encourager la participation de la communauté et créer de la valeur sur le long terme.</p>
         
+        <!-- Instructions d'aide -->
+        <div class="help-box p-6 rounded-lg mb-8">
+          <h3 class="text-xl font-semibold text-purple-400 mb-4">⚠️ Phase de test - Mega Testnet</h3>
+          <div class="bg-blue-900 border-blue-600 border-l-4 p-4 rounded mb-4">
+            <p class="text-blue-200 text-sm">
+              <strong>🧪 TAAMS est actuellement en phase de test sur Mega Testnet</strong><br>
+              • Réseau : Mega Testnet (ID: 6342)<br>
+              • RPC : https://carrot.megaeth.com/rpc<br>
+              • Explorer : https://megaexplorer.xyz<br>
+              • <strong>⚠️ La blockchain finale pour le mainnet n'est pas encore décidée</strong>
+            </p>
+          </div>
+          <h4 class="text-xl font-semibold text-purple-400 mb-4">💡 Guide de démarrage rapide</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 class="font-semibold text-green-400 mb-2">🚀 Pour commencer :</h4>
+              <ul class="text-sm text-gray-300 space-y-1">
+                <li>1. Installez MetaMask (metamask.io)</li>
+                <li>2. Ajoutez le réseau Mega Testnet</li>
+                <li>3. Connectez votre wallet</li>
+                <li>4. Obtenez des TAAMS de test</li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="font-semibold text-blue-400 mb-2">💰 Comment obtenir des TAAMS de test :</h4>
+              <ul class="text-sm text-gray-300 space-y-1">
+                <li>• DEX compatibles Mega Testnet</li>
+                <li>• Programme de parrainage</li>
+                <li>• Récompenses de staking</li>
+                <li>• Roue de la fortune</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
         <h3 class="text-2xl font-semibold text-center mb-6 text-purple-400">Pourquoi choisir TAAMS ?</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div class="bg-gray-800 p-6 rounded-lg shadow-lg feature-card">
@@ -128,11 +124,11 @@
           </div>
           <div class="bg-gray-800 p-6 rounded-lg shadow-lg feature-card">
             <h4 class="text-xl font-semibold text-purple-400 mb-2">Staking avantageux</h4>
-            <p class="text-gray-300">Stakez vos jetons pour obtenir des récompenses compétitives et soutenir l’écosystème.</p>
+            <p class="text-gray-300">Stakez vos jetons pour obtenir des récompenses compétitives et soutenir l'écosystème.</p>
           </div>
           <div class="bg-gray-800 p-6 rounded-lg shadow-lg feature-card">
             <h4 class="text-xl font-semibold text-purple-400 mb-2">Gouvernance communautaire</h4>
-            <p class="text-gray-300">Votez sur les propositions pour façonner l’avenir du protocole.</p>
+            <p class="text-gray-300">Votez sur les propositions pour façonner l'avenir du protocole.</p>
           </div>
           <div class="bg-gray-800 p-6 rounded-lg shadow-lg feature-card">
             <h4 class="text-xl font-semibold text-purple-400 mb-2">Récompenses ludiques</h4>
@@ -194,10 +190,14 @@
     <div class="container mx-auto px-6 text-center">
       <p class="text-gray-300 mb-2">© 2025 TAAMS. Tous droits réservés.</p>
       <p class="text-gray-300 mb-2">
-        <a href="https://github.com/peregrn-official/taams" target="_blank" class="text-purple-400 hover:text-purple-300">GitHub</a> |
+        <a href="https://github.com/peregrn-official/taams" target="_blank" rel="noopener" class="text-purple-400 hover:text-purple-300">GitHub</a> |
         <a href="#license" class="text-purple-400 hover:text-purple-300">Licence MIT</a>
       </p>
-      <p class="text-sm text-gray-500">Avertissement : TAAMS est en développement. Faites vos propres recherches avant de participer.</p>
+      <p class="text-sm text-gray-500">
+        Avertissement : TAAMS est en développement sur Mega Testnet. 
+        La blockchain finale n'est pas encore décidée. 
+        Faites vos propres recherches avant de participer.
+      </p>
     </div>
   </footer>
 
@@ -206,32 +206,77 @@
     // Web3 Setup
     let web3;
     try {
-      web3 = new Web3(window.ethereum || 'https://rpc-mumbai.polygon.technology');
+      web3 = new Web3(window.ethereum || 'https://carrot.megaeth.com/rpc');
     } catch (error) {
-      console.error('Erreur lors de l’initialisation de Web3:', error);
-      alert('Impossible de se connecter au réseau Polygon. Vérifiez votre connexion.');
+      console.error('Erreur lors de l initialisation de Web3:', error);
+      alert('Impossible de se connecter au reseau Mega Testnet. Verifiez votre connexion.');
     }
 
     const contractAddress = '0x087B3298Dc17D5f8982966844869a50095220698';
     const contractABI = [
+      // ERC20 Standard Functions
+      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "balanceOf", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": false, "inputs": [{ "name": "spender", "type": "address" }, { "name": "amount", "type": "uint256" }], "name": "approve", "type": "function" },
+      { "constant": true, "inputs": [{ "name": "owner", "type": "address" }, { "name": "spender", "type": "address" }], "name": "allowance", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": false, "inputs": [{ "name": "recipient", "type": "address" }, { "name": "amount", "type": "uint256" }], "name": "transfer", "type": "function" },
+      { "constant": false, "inputs": [{ "name": "sender", "type": "address" }, { "name": "recipient", "type": "address" }, { "name": "amount", "type": "uint256" }], "name": "transferFrom", "type": "function" },
+      
+      // Burn Functions
       { "constant": true, "inputs": [], "name": "totalBurned", "outputs": [{ "type": "uint256" }], "type": "function" },
       { "constant": true, "inputs": [], "name": "BURN_TARGET", "outputs": [{ "type": "uint256" }], "type": "function" },
-      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "balanceOf", "outputs": [{ "type": "uint256" }], "type": "function" },
-      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "balanceOfBL2P", "outputs": [{ "type": "uint256" }], "type": "function" },
-      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "getStakingInfo", "outputs": [{ "type": "uint256", "name": "amount" }, { "type": "bool", "name": "boostActive" }], "type": "function" },
-      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "getWheelSpinEligibility", "outputs": [{ "type": "bool", "name": "isEligible" }, { "type": "uint256", "name": "nextBlock" }], "type": "function" },
+      { "constant": false, "inputs": [{ "name": "amount", "type": "uint256" }], "name": "participateInBurn", "type": "function" },
+      { "constant": true, "inputs": [], "name": "getRemainingBurnable", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [], "name": "getCurrentCycleBurned", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [], "name": "burnPhaseActive", "outputs": [{ "type": "bool" }], "type": "function" },
+      { "constant": false, "inputs": [], "name": "checkActivation", "type": "function" },
+      
+      // BL2P Functions
+      { "constant": true, "inputs": [], "name": "bl2pRevealed", "outputs": [{ "type": "bool" }], "type": "function" },
+      { "constant": true, "inputs": [{ "name": "user", "type": "address" }], "name": "getRemainingValidBL2P", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": false, "inputs": [], "name": "claimBL2PReward", "type": "function" },
+      { "constant": true, "inputs": [{ "name": "user", "type": "address" }], "name": "getPotentialBL2PReward", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [{ "name": "user", "type": "address" }], "name": "bl2pClaimed", "outputs": [{ "type": "uint256" }], "type": "function" },
+      
+      // Staking Functions
       { "constant": false, "inputs": [{ "name": "amount", "type": "uint256" }], "name": "stake", "type": "function" },
       { "constant": false, "inputs": [], "name": "unstake", "type": "function" },
-      { "constant": false, "inputs": [{ "name": "amount", "type": "uint256" }], "name": "burn", "type": "function" },
+      { "constant": true, "inputs": [{ "name": "user", "type": "address" }], "name": "getStakingInfo", "outputs": [{ "type": "uint256", "name": "amount" }, { "type": "uint256", "name": "startBlock" }, { "type": "uint256", "name": "potentialReward" }, { "type": "uint256", "name": "bl2pBoost" }], "type": "function" },
+      { "constant": false, "inputs": [{ "name": "bl2pAmount", "type": "uint256" }], "name": "useBL2PForStaking", "type": "function" },
+      { "constant": true, "inputs": [], "name": "totalStaked", "outputs": [{ "type": "uint256" }], "type": "function" },
+      
+      // Wheel Functions
       { "constant": false, "inputs": [], "name": "spinWheel", "type": "function" },
-      { "constant": false, "inputs": [{ "name": "spender", "type": "address" }, { "name": "amount", "type": "uint256" }], "name": "approve", "type": "function" },
-      { "constant": true, "inputs": [{ "name": "owner", "type": "address" }, { "name": "spender", "type": "address" }], "name": "allowance", "outputs": [{ "type": "uint256" }], "type": "function" }
+      { "constant": true, "inputs": [{ "name": "user", "type": "address" }], "name": "getWheelSpinEligibility", "outputs": [{ "type": "bool", "name": "eligible" }, { "type": "uint256", "name": "nextSpinBlock" }], "type": "function" },
+      { "constant": true, "inputs": [], "name": "wheelRewardReserve", "outputs": [{ "type": "uint256" }], "type": "function" },
+      
+      // Governance Functions
+      { "constant": false, "inputs": [{ "name": "desc", "type": "string" }, { "name": "newValue", "type": "uint256" }, { "name": "newAddress", "type": "address" }, { "name": "proposalType", "type": "uint8" }], "name": "submitProposal", "type": "function" },
+      { "constant": false, "inputs": [{ "name": "id", "type": "uint256" }, { "name": "commitHash", "type": "bytes32" }], "name": "commitVote", "type": "function" },
+      { "constant": false, "inputs": [{ "name": "id", "type": "uint256" }, { "name": "support", "type": "bool" }, { "name": "secret", "type": "bytes32" }], "name": "revealVote", "type": "function" },
+      { "constant": false, "inputs": [{ "name": "id", "type": "uint256" }], "name": "executeProposal", "type": "function" },
+      { "constant": true, "inputs": [], "name": "proposalCount", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [], "name": "QUORUM", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [], "name": "VOTE_THRESHOLD", "outputs": [{ "type": "uint256" }], "type": "function" },
+      
+      // Delegation Functions
+      { "constant": false, "inputs": [{ "name": "delegate", "type": "address" }, { "name": "amount", "type": "uint256" }], "name": "delegateVote", "type": "function" },
+      { "constant": false, "inputs": [], "name": "revokeDelegation", "type": "function" },
+      { "constant": false, "inputs": [{ "name": "user", "type": "address" }], "name": "updateBL2PMaturity", "type": "function" },
+      { "constant": false, "inputs": [{ "name": "to", "type": "address" }, { "name": "amount", "type": "uint256" }], "name": "transferBL2P", "type": "function" },
+      
+      // Constants and Variables
+      { "constant": true, "inputs": [], "name": "MAX_SUPPLY", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [], "name": "ACTIVATION_THRESHOLD", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [], "name": "LOCKED_RESERVE", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [], "name": "STAKING_MIN_AMOUNT", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [], "name": "WHEEL_SPIN_PERIOD_BLOCKS", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [], "name": "emergencyPaused", "outputs": [{ "type": "bool" }], "type": "function" }
     ];
     let contract;
     try {
       contract = new web3.eth.Contract(contractABI, contractAddress);
     } catch (error) {
-      console.error('Erreur lors de l’initialisation du contrat:', error);
+      console.error('Erreur lors de l initialisation du contrat:', error);
     }
 
     // Simulated testResult.json data
@@ -256,9 +301,9 @@
       try {
         const chainId = await web3.eth.getChainId();
         
-        // Check if we're on Polygon mainnet (137) or testnet (80001)
-        if (chainId !== 137 && chainId !== 80001) {
-          alert(`⚠️ RÉSEAU INCORRECT\n\nVous êtes connecté au réseau ${chainId}.\nVeuillez vous connecter au réseau Polygon :\n• Polygon Mainnet (ID: 137)\n• Polygon Mumbai Testnet (ID: 80001)\n\n📋 INSTRUCTIONS :\n1. Ouvrez MetaMask\n2. Cliquez sur le réseau en haut\n3. Sélectionnez "Polygon Mainnet"\n4. Si absent, ajoutez-le manuellement`);
+        // Check if we're on Mega Testnet (6342)
+        if (chainId !== 6342) {
+          alert(`⚠️ RÉSEAU INCORRECT\n\nVous êtes connecté au réseau ${chainId}.\nVeuillez vous connecter au réseau Mega Testnet :\n• Mega Testnet (ID: 6342)\n• RPC: https://carrot.megaeth.com/rpc\n• Explorer: https://megaexplorer.xyz\n\n📋 INSTRUCTIONS :\n1. Ouvrez MetaMask\n2. Cliquez sur le réseau en haut\n3. Sélectionnez "Ajouter un réseau"\n4. Ajoutez le réseau Mega Testnet avec les paramètres ci-dessus`);
           return false;
         }
         return true;
@@ -296,7 +341,7 @@
         
         if (BigInt(balance) < BigInt(amountWei)) {
           const balanceFormatted = web3.utils.fromWei(balance, 'ether');
-          alert(`💰 SOLDE INSUFFISANT\n\nSolde actuel : ${parseFloat(balanceFormatted).toFixed(2)} TAAMS\nMontant requis : ${amount} TAAMS\n\n💡 COMMENT OBTENIR DES TAAMS :\n1. Achetez sur un DEX (PancakeSwap, QuickSwap)\n2. Participez aux programmes de récompenses\n3. Gagnez via la roue de la fortune\n4. Recevez via le programme de parrainage`);
+          alert(`💰 SOLDE INSUFFISANT\n\nSolde actuel : ${parseFloat(balanceFormatted).toFixed(2)} TAAMS\nMontant requis : ${amount} TAAMS\n\n💡 COMMENT OBTENIR DES TAAMS :\n1. Achetez sur un DEX compatible Mega Testnet\n2. Participez aux programmes de récompenses\n3. Gagnez via la roue de la fortune\n4. Recevez via le programme de parrainage`);
           return false;
         }
         return true;
@@ -307,14 +352,35 @@
       }
     }
 
+    async function checkBL2PRequirement(address, actionName) {
+      try {
+        // Vérifier si BL2P est révélé
+        const bl2pRevealed = await contract.methods.bl2pRevealed().call();
+        if (!bl2pRevealed) {
+          alert(`🎯 BL2P NON RÉVÉLÉ\n\n${actionName} nécessite que BL2P soit révélé.\n\n📋 POUR RÉVÉLER BL2P :\n1. Participez au burn de TAAMS\n2. Attendez que l'objectif soit atteint\n3. Réclamez vos tokens BL2P\n\n💡 BL2P donne accès aux fonctionnalités premium de TAAMS.`);
+          return false;
+        }
+        
+        // Vérifier si l'utilisateur a des BL2P valides
+        const bl2pBalance = await contract.methods.getRemainingValidBL2P(address).call();
+        if (parseInt(bl2pBalance) === 0) {
+          alert(`🎯 BL2P REQUIS\n\n${actionName} nécessite des tokens BL2P valides.\n\n📋 COMMENT OBTENIR BL2P :\n1. Participez au burn de TAAMS\n2. Réclamez vos récompenses BL2P\n3. Gardez vos BL2P actifs en votant\n\n💡 BL2P = Burn Level 2 Protocol tokens`);
+          return false;
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('Erreur vérification BL2P:', error);
+        alert('❌ Impossible de vérifier les exigences BL2P. Réessayez.');
+        return false;
+      }
+    }
+
     async function handleTransaction(txPromise, successMessage, failureInstructions = '') {
       try {
-        // Show loading message
-        const loadingMsg = alert('⏳ Transaction en cours...\nNe fermez pas cette page.');
-        
         const tx = await txPromise;
         
-        alert(`✅ SUCCÈS !\n\n${successMessage}\n\n🔗 Transaction Hash :\n${tx.transactionHash}\n\n💡 Vous pouvez vérifier cette transaction sur PolygonScan.`);
+        alert(`✅ SUCCÈS !\n\n${successMessage}\n\n🔗 Transaction Hash :\n${tx.transactionHash}\n\n💡 Vous pouvez vérifier cette transaction sur megaexplorer.xyz`);
         return tx;
       } catch (error) {
         console.error('Erreur de transaction:', error);
@@ -324,9 +390,9 @@
         if (error.message.includes('User denied') || error.code === 4001) {
           errorMessage += '🚫 Transaction annulée par l\'utilisateur.\n\n📋 POUR CONTINUER :\n1. Relancez l\'action\n2. Acceptez la transaction dans MetaMask\n3. Attendez la confirmation';
         } else if (error.message.includes('insufficient funds')) {
-          errorMessage += '💰 Fonds insuffisants pour les frais de transaction.\n\n📋 SOLUTIONS :\n1. Ajoutez du MATIC pour les frais\n2. Réduisez le montant de la transaction\n3. Attendez que les frais de réseau baissent';
+          errorMessage += '💰 Fonds insuffisants pour les frais de transaction.\n\n📋 SOLUTIONS :\n1. Ajoutez de l\'ETH pour les frais\n2. Réduisez le montant de la transaction\n3. Attendez que les frais de réseau baissent';
         } else if (error.message.includes('gas')) {
-          errorMessage += '⛽ Problème de Gas.\n\n📋 SOLUTIONS :\n1. Augmentez les frais de gas\n2. Réessayez plus tard\n3. Vérifiez le réseau Polygon';
+          errorMessage += '⛽ Problème de Gas.\n\n📋 SOLUTIONS :\n1. Augmentez les frais de gas\n2. Réessayez plus tard\n3. Vérifiez le réseau Mega Testnet';
         } else if (error.message.includes('revert')) {
           errorMessage += '🔄 Transaction rejetée par le contrat.\n\n📋 CAUSES POSSIBLES :\n1. Conditions non remplies\n2. Montant invalide\n3. Limite temporelle non respectée';
           if (failureInstructions) {
@@ -388,33 +454,56 @@
 
     // Mobile Menu
     document.getElementById('mobileMenuBtn').onclick = () => {
-      document.getElementById('mobileMenu').classList.toggle('hidden');
+      const mobileMenu = document.getElementById('mobileMenu');
+      mobileMenu.classList.toggle('hidden');
+      mobileMenu.classList.toggle('flex');
     };
+
+    // Close mobile menu when clicking on a link
+    document.querySelectorAll('#mobileMenu a').forEach(link => {
+      link.addEventListener('click', () => {
+        const mobileMenu = document.getElementById('mobileMenu');
+        mobileMenu.classList.add('hidden');
+        mobileMenu.classList.remove('flex');
+      });
+    });
 
     // Wallet Connect
     async function connectWallet() {
       if (!window.ethereum) {
-        alert('MetaMask n\'est pas installé !');
+        alert(`🦊 METAMASK NON INSTALLÉ\n\n📋 INSTRUCTIONS :\n1. Allez sur metamask.io\n2. Téléchargez l'extension pour votre navigateur\n3. Créez un nouveau wallet ou importez-en un\n4. Ajoutez le réseau Mega Testnet (ID: 6342, RPC: https://carrot.megaeth.com/rpc)\n5. Revenez ici et cliquez "Connexion MetaMask"`);
         return;
       }
+      
       try {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         const address = accounts[0];
         const balance = await web3.eth.getBalance(address);
-        document.getElementById('walletAddress').textContent = `Connecté : ${address.slice(0, 6)}...${address.slice(-4)} (${web3.utils.fromWei(balance, 'ether')} ETH)`;
+        const ethBalance = parseFloat(web3.utils.fromWei(balance, 'ether')).toFixed(4);
+        
+        document.getElementById('walletAddress').textContent = `Connecté : ${address.slice(0, 6)}...${address.slice(-4)} (${ethBalance} ETH)`;
         document.getElementById('connectWallet').style.display = 'none';
         document.getElementById('disconnectWallet').classList.remove('hidden');
         localStorage.setItem('walletAddress', address);
+
+        // Check if on correct network
+        await checkNetwork();
 
         const message = "TAAMS - Identification Web3";
         const signature = await window.ethereum.request({
           method: 'personal_sign',
           params: [message, address]
         });
-        console.log('Signature:', signature);
+        
+        alert(`✅ WALLET CONNECTÉ AVEC SUCCÈS !\n\nAdresse : ${address.slice(0, 10)}...${address.slice(-8)}\nSolde ETH : ${ethBalance}\nRéseau : Mega Testnet\n\n🎉 Vous pouvez maintenant utiliser toutes les fonctionnalités TAAMS !`);
+        
       } catch (error) {
         console.error('Erreur lors de la connexion:', error);
-        alert('Erreur lors de la connexion à MetaMask.');
+        if (error.code === 4001) {
+          alert('🚫 Connexion annulée par l\'utilisateur.\n\nPour utiliser TAAMS, vous devez connecter votre wallet.');
+        } else {
+          alert('❌ Erreur lors de la connexion à MetaMask.\n\nVérifiez que MetaMask est installé et débloqué.');
+        }
       }
     }
 
@@ -424,17 +513,21 @@
       document.getElementById('walletAddress').textContent = '';
       document.getElementById('connectWallet').style.display = 'block';
       document.getElementById('disconnectWallet').classList.add('hidden');
-      alert('Wallet déconnecté avec succès !');
+      alert('🔓 Wallet déconnecté avec succès !\n\nVous pouvez toujours naviguer sur le site, mais vous devrez vous reconnecter pour utiliser les fonctionnalités blockchain.');
     }
 
     document.getElementById('connectWallet').onclick = connectWallet;
     document.getElementById('disconnectWallet').onclick = disconnectWallet;
 
+    // Auto-reconnect if wallet was previously connected
     if (localStorage.getItem('walletAddress')) {
-      document.getElementById('walletAddress').textContent = `Connecté : ${localStorage.getItem('walletAddress').slice(0, 6)}...${localStorage.getItem('walletAddress').slice(-4)}`;
+      const savedAddress = localStorage.getItem('walletAddress');
+      document.getElementById('walletAddress').textContent = `Connecté : ${savedAddress.slice(0, 6)}...${savedAddress.slice(-4)}`;
       document.getElementById('connectWallet').style.display = 'none';
       document.getElementById('disconnectWallet').classList.remove('hidden');
-    }    // Test Dashboard
+    }
+
+    // Test Dashboard
     async function loadTestResults() {
       try {
         const data = testData;
@@ -473,9 +566,9 @@
         const burnTarget = await contract.methods.BURN_TARGET().call() || '1000000000000000000000000';
         const remaining = burnTarget - totalBurned;
 
-        document.getElementById('totalBurned').textContent = web3.utils.fromWei(totalBurned, 'ether');
-        document.getElementById('burnTarget').textContent = web3.utils.fromWei(burnTarget, 'ether');
-        document.getElementById('remainingBurn').textContent = web3.utils.fromWei(remaining.toString(), 'ether');
+        document.getElementById('totalBurned').textContent = parseFloat(web3.utils.fromWei(totalBurned, 'ether')).toFixed(0);
+        document.getElementById('burnTarget').textContent = parseFloat(web3.utils.fromWei(burnTarget, 'ether')).toFixed(0);
+        document.getElementById('remainingBurn').textContent = parseFloat(web3.utils.fromWei(remaining.toString(), 'ether')).toFixed(0);
         document.getElementById('burnProgress').style.width = `${(totalBurned / burnTarget) * 100}%`;
 
         new Chart(document.getElementById('burnChart'), {
@@ -537,7 +630,7 @@
               const gasPrice = await getGasPrice();
               
               await handleTransaction(
-                contract.methods.burn(amountWei).send({ 
+                contract.methods.participateInBurn(amountWei).send({ 
                   from: address,
                   gas: 100000,
                   gasPrice: gasPrice
@@ -557,7 +650,9 @@
       } catch (error) {
         console.error('Erreur lors du chargement des données de burn:', error);
       }
-    }    // Wheel Module
+    }
+
+    // Wheel Module
     const rewards = ['10 TAAMS', '1 NFT', 'Rien', '100 TAAMS', 'Boost APY', 'Essai encore !', '50 TAAMS', '2 NFTs'];
     async function checkEligibility() {
       const address = await checkWalletConnection();
@@ -578,26 +673,26 @@
       }
       
       try {
-        const eligibility = await contract.methods.getWheelSpinEligibility(address).call() || { isEligible: false, nextBlock: '0' };
+        const eligibility = await contract.methods.getWheelSpinEligibility(address).call() || { eligible: false, nextSpinBlock: '0' };
         
-        if (eligibility.isEligible) {
+        if (eligibility.eligible) {
           document.getElementById('eligibility').innerHTML = `
             <span class="text-green-500">✅ Éligible pour spin</span><br>
             <small class="text-gray-400">Vous pouvez tourner la roue maintenant !</small>
           `;
         } else {
           const currentBlock = await web3.eth.getBlockNumber();
-          const blocksRemaining = Math.max(0, eligibility.nextBlock - currentBlock);
-          const timeRemaining = blocksRemaining * 2; // ~2 sec per block on Polygon
+          const blocksRemaining = Math.max(0, eligibility.nextSpinBlock - currentBlock);
+          const timeRemaining = blocksRemaining * 2; // ~2 sec per block on Mega Testnet
           
           document.getElementById('eligibility').innerHTML = `
             <span class="text-yellow-500">⏳ Non éligible</span><br>
             <small class="text-gray-400">Prochain spin dans ~${Math.ceil(timeRemaining/60)} minutes</small><br>
-            <small class="text-gray-400">Bloc requis : ${eligibility.nextBlock} (actuel: ${currentBlock})</small>
+            <small class="text-gray-400">Bloc requis : ${eligibility.nextSpinBlock} (actuel: ${currentBlock})</small>
           `;
         }
         
-        document.getElementById('spinBtn').disabled = !eligibility.isEligible;
+        document.getElementById('spinBtn').disabled = !eligibility.eligible;
 
         new Chart(document.getElementById('wheelChart'), {
           type: 'doughnut',
@@ -613,9 +708,14 @@
         });
 
         document.getElementById('spinBtn').onclick = async function() {
+          // Vérifier les exigences BL2P
+          if (!await checkBL2PRequirement(address, "La roue de la fortune")) {
+            return;
+          }
+          
           // Re-check eligibility before spinning
           const currentEligibility = await contract.methods.getWheelSpinEligibility(address).call();
-          if (!currentEligibility.isEligible) {
+          if (!currentEligibility.eligible) {
             alert(`⏳ SPIN NON AUTORISÉ\n\n📋 RAISONS POSSIBLES :\n1. Cooldown non écoulé\n2. Conditions non remplies\n3. Pas assez de TAAMS stakés\n\n💡 COMMENT DEVENIR ÉLIGIBLE :\n1. Stakez au moins 1000 TAAMS\n2. Attendez la fin du cooldown\n3. Participez aux activités TAAMS`);
             return;
           }
@@ -644,95 +744,160 @@
             setTimeout(() => checkEligibility(), 5000);
             
           } catch (error) {
-            console.error('Erreur lors du spin:', error);
-            if (error.message.includes('User denied')) {
-              alert('Transaction annulée par l\'utilisateur.');
-            } else {
-              alert('Erreur lors du spin: ' + error.message);
-            }
+            // Error already handled in handleTransaction
           }
         };
       } catch (error) {
-        console.error('Erreur lors de la vérification d’éligibilité:', error);
-        document.getElementById('eligibility').textContent = 'Erreur de connexion';
+        console.error('Erreur lors de la verification d eligibilite:', error);
+        document.getElementById('eligibility').innerHTML = 
+          '<span class="text-red-500">❌ Erreur de connexion</span><br>' +
+          '<small class="text-gray-400">Impossible de vérifier l\'éligibilité</small>';
       }
     }
 
     // Stake Module
     async function loadStakingInfo() {
-      if (!window.ethereum) return;
+      const address = await checkWalletConnection();
+      if (!address) return;
+      
+      if (!await checkNetwork()) return;
+      
       try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const address = accounts[0];
-        const stakingInfo = await contract.methods.getStakingInfo(address).call() || { amount: '0', boostActive: false };
-        document.getElementById('stakedAmount').textContent = `${web3.utils.fromWei(stakingInfo.amount, 'ether')} TAAMS`;
-        document.getElementById('boostStatus').textContent = `Boost BL2P : ${stakingInfo.boostActive ? 'Actif' : 'Inactif'}`;
+        const stakingInfo = await contract.methods.getStakingInfo(address).call() || { amount: '0', startBlock: '0', potentialReward: '0', bl2pBoost: '0' };
+        const stakedAmount = parseFloat(web3.utils.fromWei(stakingInfo.amount, 'ether')).toFixed(2);
+        
+        document.getElementById('stakedAmount').textContent = `${stakedAmount} TAAMS`;
+        document.getElementById('boostStatus').innerHTML = `
+          <span class="${stakingInfo.bl2pBoost > 0 ? 'text-green-500' : 'text-gray-500'}">
+            Boost BL2P : ${stakingInfo.bl2pBoost > 0 ? '✅ Actif (' + web3.utils.fromWei(stakingInfo.bl2pBoost, 'ether') + ')' : '❌ Inactif'}
+          </span>
+        `;
 
         document.getElementById('stakeBtn').onclick = async function() {
           const amount = document.getElementById('stakeAmount').value;
+          
           if (!amount || amount <= 0) {
-            alert('Veuillez entrer un montant valide.');
+            alert(`❌ MONTANT INVALIDE\n\n📋 INSTRUCTIONS :\n1. Entrez un montant supérieur à 0\n2. Minimum recommandé : 100 TAAMS\n3. Maximum autorisé : votre solde total\n\n💡 CONSEILS STAKING :\n• Plus vous stakez, plus vous gagnez\n• Le staking débloque l'accès à la roue\n• Les récompenses sont calculées en temps réel`);
             return;
           }
+          
+          if (!await checkTokenBalance(address, amount)) return;
+          
           try {
+            // Check allowance first
             const allowance = await contract.methods.allowance(address, contractAddress).call();
-            if (allowance < web3.utils.toWei(amount, 'ether')) {
-              await contract.methods.approve(contractAddress, web3.utils.toWei(amount, 'ether')).send({ from: address });
+            const amountWei = web3.utils.toWei(amount, 'ether');
+            
+            if (BigInt(allowance) < BigInt(amountWei)) {
+              await handleTransaction(
+                contract.methods.approve(contractAddress, amountWei).send({ from: address }),
+                `✅ Autorisation accordée pour ${amount} TAAMS\n\nVous pouvez maintenant procéder au staking.`
+              );
             }
-            await contract.methods.stake(web3.utils.toWei(amount, 'ether')).send({ from: address });
-            alert('Staking effectué !');
-            loadStakingInfo();
+            
+            await handleTransaction(
+              contract.methods.stake(amountWei).send({ from: address }),
+              `💎 ${amount} TAAMS stakés avec succès !\n\n✨ BÉNÉFICES :\n• Revenus passifs via staking\n• Accès à la roue de la fortune\n• Participation à la gouvernance\n• Boost potentiel des récompenses`,
+              `💡 APRÈS LE STAKING :\n1. Vos TAAMS sont en sécurité dans le contrat\n2. Vous gagnez des récompenses automatiquement\n3. Vous pouvez unstake à tout moment\n4. Votre staking vous rend éligible pour la roue`
+            );
+            
+            setTimeout(() => loadStakingInfo(), 3000);
           } catch (error) {
-            console.error('Erreur lors du staking:', error);
-            alert('Erreur lors du staking.');
+            // Error already handled in handleTransaction
           }
         };
 
         document.getElementById('unstakeBtn').onclick = async function() {
+          if (parseFloat(stakedAmount) === 0) {
+            alert(`ℹ️ AUCUN STAKING ACTIF\n\nVous n'avez actuellement aucun TAAMS staké.\n\n💡 POUR COMMENCER LE STAKING :\n1. Entrez un montant dans le champ ci-dessus\n2. Cliquez sur "Staker"\n3. Confirmez la transaction dans MetaMask`);
+            return;
+          }
+          
           try {
-            await contract.methods.unstake().send({ from: address });
-            alert('Unstake effectué !');
-            loadStakingInfo();
+            await handleTransaction(
+              contract.methods.unstake().send({ from: address }),
+              `🔓 Unstake effectué avec succès !\n\n💰 Vos TAAMS stakés ont été récupérés\n✨ Les récompenses accumulées ont été créditées\n\n⚠️ ATTENTION :\n• Vous n'êtes plus éligible pour la roue\n• Le boost BL2P est désactivé\n• Vous pouvez restaker à tout moment`,
+              `💡 APRÈS L'UNSTAKE :\n1. Vos TAAMS retournent dans votre wallet\n2. Les récompenses sont automatiquement versées\n3. L'éligibilité roue sera supprimée\n4. Vous pouvez restaker immédiatement si souhaité`
+            );
+            
+            setTimeout(() => loadStakingInfo(), 3000);
           } catch (error) {
-            console.error('Erreur lors de l’unstake:', error);
-            alert('Erreur lors de l’unstake.');
+            // Error already handled in handleTransaction
           }
         };
       } catch (error) {
         console.error('Erreur lors du chargement des infos de staking:', error);
+        alert('❌ Impossible de charger les informations de staking.\n\nVérifiez votre connexion et réessayez.');
       }
     }
 
     // My Status
     async function loadUserStatus() {
-      if (!window.ethereum) return;
+      const address = await checkWalletConnection();
+      if (!address) return;
+      
       try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const address = accounts[0];
-        const taamsBalance = await contract.methods.balanceOf(address).call() || '0';
-        const bl2pBalance = await contract.methods.balanceOfBL2P(address).call() || '0';
-        document.getElementById('taamsBalance').textContent = `${web3.utils.fromWei(taamsBalance, 'ether')} TAAMS`;
-        document.getElementById('bl2pBalance').textContent = `${web3.utils.fromWei(bl2pBalance, 'ether')} BL2P`;
+        const [taamsBalance, bl2pBalance] = await Promise.all([
+          contract.methods.balanceOf(address).call() || '0',
+          contract.methods.getRemainingValidBL2P(address).call() || '0'
+        ]);
+        
+        const taamsFormatted = parseFloat(web3.utils.fromWei(taamsBalance, 'ether')).toFixed(2);
+        const bl2pFormatted = parseFloat(web3.utils.fromWei(bl2pBalance, 'ether')).toFixed(2);
+        
+        document.getElementById('taamsBalance').textContent = `${taamsFormatted} TAAMS`;
+        document.getElementById('bl2pBalance').textContent = `${bl2pFormatted} BL2P`;
+
+        // Display purchase instructions if balance is low
+        if (parseFloat(taamsFormatted) < 10) {
+          const helpText = document.getElementById('purchaseInstructions');
+          if (helpText) {
+            helpText.innerHTML = `
+              <div class="bg-yellow-900 border-yellow-600 border-l-4 p-4 rounded">
+                <h4 class="text-yellow-400 font-semibold mb-2">💡 Comment obtenir des TAAMS ?</h4>
+                <ul class="text-yellow-200 text-sm space-y-1">
+                  <li>🏪 <strong>PancakeSwap/QuickSwap :</strong> Échangez MATIC contre TAAMS</li>
+                  <li>🎁 <strong>Programme de parrainage :</strong> Invitez des amis</li>
+                  <li>💎 <strong>Staking :</strong> Gagnez des récompenses</li>
+                  <li>🎰 <strong>Roue de la fortune :</strong> Tentez votre chance</li>
+                </ul>
+                <p class="text-yellow-300 text-xs mt-2">
+                  Contrat TAAMS : ${contractAddress}
+                </p>
+              </div>
+            `;
+          }
+        }
 
         const spinHistory = JSON.parse(localStorage.getItem('spinHistory') || '[]');
         document.getElementById('spinCount').textContent = spinHistory.length;
         const spinList = document.getElementById('spinHistory');
-        spinList.innerHTML = '';
-        spinHistory.forEach(spin => {
-          const li = document.createElement('li');
-          li.textContent = `Spin : ${spin.result} le ${new Date(spin.date).toLocaleDateString('fr-FR')}`;
-          spinList.appendChild(li);
-        });
+        if (spinList) {
+          spinList.innerHTML = '';
+          spinHistory.forEach(spin => {
+            const li = document.createElement('li');
+            li.className = 'text-gray-300 py-1';
+            li.innerHTML = `
+              <span class="text-purple-400">🎰</span> 
+              ${spin.result} 
+              <span class="text-gray-500 text-sm">le ${new Date(spin.date).toLocaleDateString('fr-FR')}</span>
+            `;
+            spinList.appendChild(li);
+          });
+        }
       } catch (error) {
         console.error('Erreur lors du chargement du statut:', error);
+        alert('❌ Impossible de charger votre statut.\n\nVérifiez votre connexion et réessayez.');
       }
     }
 
     function addSpinToHistory(result) {
       const spinHistory = JSON.parse(localStorage.getItem('spinHistory') || '[]');
       spinHistory.push({ result, date: new Date().toISOString() });
+      if (spinHistory.length > 50) { // Limit history to 50 entries
+        spinHistory.splice(0, spinHistory.length - 50);
+      }
       localStorage.setItem('spinHistory', JSON.stringify(spinHistory));
-      loadUserStatus();
     }
 
     // Initial Load

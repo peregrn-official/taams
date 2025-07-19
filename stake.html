@@ -1,220 +1,101 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TAAMS - Module de Staking</title>
-  <meta name="description" content="Stakez vos TAAMS pour gagner des récompenses et activez le boost BL2P.">
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-    .fade-in { animation: fadeIn 1s ease-in; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  </style>
-</head>
-<body class="bg-gray-900 text-white">
-  <!-- Header -->
-  <header class="bg-gray-800 shadow fixed w-full top-0 z-10">
-    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-      <div class="flex items-center">
-        <img src="https://raw.githubusercontent.com/peregrn-official/taams/main/assets/logo.jpg" alt="Logo TAAMS" class="h-12 mr-3">
-        <span class="text-2xl font-bold text-purple-400">TAAMS</span>
-      </div>
-      <div class="flex items-center space-x-4">
-        <div id="mobileMenu" class="hidden md:flex space-x-6">
-          <a href="#/home" class="text-gray-300 hover:text-purple-400">Accueil</a>
-          <a href="#/dashboard" class="text-gray-300 hover:text-purple-400">Tableau de bord</a>
-          <a href="#/burn" class="text-gray-300 hover:text-purple-400">Burn</a>
-          <a href="#/wheel" class="text-gray-300 hover:text-purple-400">Roue</a>
-          <a href="#/stake" class="text-gray-300 hover:text-purple-400">Staking</a>
-          <a href="#/governance" class="text-gray-300 hover:text-purple-400">Gouvernance</a>
-          <a href="#/my-status" class="text-gray-300 hover:text-purple-400">Mon statut</a>
-        </div>
-        <p id="walletAddress" class="text-gray-300"></p>
-        <button id="connectWallet" class="bg-purple-500 text-white px-4 py-2 rounded-full">Connexion MetaMask</button>
-        <button id="mobileMenuBtn" class="md:hidden text-gray-300">☰</button>
-      </div>
-    </nav>
-  </header>
-
-  <!-- Main Content -->
-  <main class="pt-24">
-    <section id="stake" class="py-20 bg-gray-900">
-      <div class="container mx-auto px-6">
-        <h2 class="text-4xl font-bold text-center mb-10 text-purple-400 fade-in">Module de Staking</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
-            <h3 class="text-xl font-semibold text-purple-400 mb-2">Montant staké</h3>
-            <p id="stakedAmount" class="text-3xl font-bold">0 TAAMS</p>
-            <p id="boostStatus" class="text-lg mt-2">Boost BL2P : Inactif</p>
-          </div>
-          <div class="text-center">
-            <input id="stakeAmount" type="number" class="bg-gray-700 text-white p-2 rounded" placeholder="Montant à staker">
-            <button id="stakeBtn" class="mt-4 bg-purple-500 text-white px-6 py-2 rounded-full">Staker</button>
-            <button id="unstakeBtn" class="mt-4 bg-red-500 text-white px-6 py-2 rounded-full">Unstaker</button>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Footer -->
-  <footer class="bg-gray-900 py-8">
-    <div class="container mx-auto px-6 text-center">
-      <p class="text-gray-300 mb-2">© 2025 TAAMS. Tous droits réservés.</p>
-      <p class="text-gray-300 mb-2">
-        <a href="https://github.com/peregrn-official/taams" target="_blank" class="text-purple-400 hover:text-purple-300">GitHub</a> |
-        <a href="#license" class="text-purple-400 hover:text-purple-300">Licence MIT</a>
-      </p>
-      <p class="text-sm text-gray-500">Avertissement : TAAMS est en développement. Faites vos propres recherches avant de participer.</p>
+<!-- Stake Page Content -->
+<div class="container mx-auto px-6 py-20">
+  <h1 class="text-4xl font-bold text-center mb-10 text-purple-400">💰 Staking TAAMS</h1>
+  
+  <!-- Staking Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+      <h3 class="text-2xl font-semibold text-green-400 mb-2">Montant Staké</h3>
+      <p id="stakedAmount" class="text-3xl font-bold text-white">0 TAAMS</p>
+      <p class="text-gray-400">Vos tokens en staking</p>
     </div>
-  </footer>
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+      <h3 class="text-2xl font-semibold text-blue-400 mb-2">APY Actuel</h3>
+      <p class="text-3xl font-bold text-white">15%</p>
+      <p class="text-gray-400">Rendement annuel</p>
+    </div>
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+      <h3 class="text-2xl font-semibold text-purple-400 mb-2">Statut Boost</h3>
+      <p id="boostStatus" class="text-lg font-semibold text-white">Inactif</p>
+      <p class="text-gray-400">Bonus BL2P</p>
+    </div>
+  </div>
 
-  <!-- JavaScript -->
-  <script>
-    const web3 = new Web3(window.ethereum || 'https://rpc-mumbai.polygon.technology');
-    const contractAddress = '0x...'; // Remplacer par l'adresse du contrat
-    const contractABI = [
-      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "getStakingInfo", "outputs": [{ "type": "uint256", "name": "amount" }, { "type": "bool", "name": "boostActive" }], "type": "function" },
-      { "constant": false, "inputs": [{ "name": "amount", "type": "uint256" }], "name": "stake", "type": "function" },
-      { "constant": false, "inputs": [], "name": "unstake", "type": "function" },
-      { "constant": false, "inputs": [{ "name": "spender", "type": "address" }, { "name": "amount", "type": "uint256" }], "name": "approve", "type": "function" },
-      { "constant": true, "inputs": [{ "name": "owner", "type": "address" }, { "name": "spender", "type": "address" }], "name": "allowance", "outputs": [{ "type": "uint256" }], "type": "function" }
-    ];
-    const contract = new web3.eth.Contract(contractABI, contractAddress);
+  <!-- Staking Actions -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+    <!-- Stake -->
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+      <h3 class="text-xl font-semibold text-green-400 mb-4">📈 Staker des TAAMS</h3>
+      <p class="text-gray-300 mb-4">Stakez vos tokens pour gagner des récompenses et soutenir l'écosystème.</p>
+      
+      <div class="space-y-4">
+        <div>
+          <label for="stakeAmount" class="block text-sm font-medium text-gray-400 mb-2">Montant à staker</label>
+          <input type="number" id="stakeAmount" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white" placeholder="0.0" min="0" step="0.1">
+        </div>
+        <button id="stakeBtn" class="w-full bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors">
+          🚀 Staker les Tokens
+        </button>
+      </div>
+    </div>
 
-    // Mobile Menu
-    document.getElementById('mobileMenuBtn').onclick = () => {
-      document.getElementById('mobileMenu').classList.toggle('hidden');
-    };
+    <!-- Unstake -->
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+      <h3 class="text-xl font-semibold text-red-400 mb-4">📉 Récupérer le Stake</h3>
+      <p class="text-gray-300 mb-4">Retirez vos tokens stakés à tout moment (les récompenses sont automatiquement calculées).</p>
+      
+      <div class="space-y-4">
+        <div class="bg-gray-700 p-4 rounded-lg">
+          <p class="text-sm text-gray-400">Montant disponible pour retrait :</p>
+          <p id="availableUnstake" class="text-lg font-semibold text-white">0 TAAMS</p>
+        </div>
+        <button id="unstakeBtn" class="w-full bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors">
+          💸 Récupérer le Stake
+        </button>
+      </div>
+    </div>
+  </div>
 
-    // Wallet Connect
-    async function connectWallet() {
-      if (window.ethereum) {
-        try {
-          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          const address = accounts[0];
-          const balance = await web3.eth.getBalance(address);
-          document.getElementById('walletAddress').textContent = `Connecté : ${address.slice(0, 6)}...${address.slice(-4)} (${web3.utils.fromWei(balance, 'ether')} ETH)`;
-          document.getElementById('connectWallet').textContent = 'Connecté';
-          localStorage.setItem('walletAddress', address);
+  <!-- Staking Rewards -->
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+    <h3 class="text-xl font-semibold text-purple-400 mb-4">🎁 Récompenses de Staking</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <h4 class="text-lg font-semibold text-blue-400 mb-2">Récompenses accumulées</h4>
+        <p id="pendingRewards" class="text-2xl font-bold text-white">0 TAAMS</p>
+        <p class="text-gray-400 text-sm">Prêtes à être récoltées</p>
+      </div>
+      <div>
+        <h4 class="text-lg font-semibold text-green-400 mb-2">Récompenses totales</h4>
+        <p id="totalRewards" class="text-2xl font-bold text-white">0 TAAMS</p>
+        <p class="text-gray-400 text-sm">Depuis le début</p>
+      </div>
+    </div>
+    <button id="claimRewardsBtn" class="mt-4 bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600 transition-colors">
+      🏆 Récolter les Récompenses
+    </button>
+  </div>
 
-          const message = "TAAMS - Identification Web3";
-          const signature = await window.ethereum.request({
-            method: 'personal_sign',
-            params: [message, address]
-          });
-          console.log('Signature:', signature);
-        } catch (error) {
-          console.error('Erreur lors de la connexion:', error);
-          alert('Erreur lors de la connexion à MetaMask.');
-        }
-      } else {
-        alert('MetaMask n’est pas installé !');
-      }
-    }
-
-    document.getElementById('connectWallet').onclick = connectWallet;
-
-    if (localStorage.getItem('walletAddress')) {
-      document.getElementById('walletAddress').textContent = `Connecté : ${localStorage.getItem('walletAddress').slice(0, 6)}...${localStorage.getItem('walletAddress').slice(-4)}`;
-      document.getElementById('connectWallet').textContent = 'Connecté';
-    }
-
-    // Load Staking Info
-    async function loadStakingInfo() {
-      if (window.ethereum) {
-        try {
-          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          const address = accounts[0];
-          const stakingInfo = await contract.methods.getStakingInfo(address).call() || { amount: '0', boostActive: false };
-          document.getElementById('stakedAmount').textContent = `${web3.utils.fromWei(stakingInfo.amount, 'ether')} TAAMS`;
-          document.getElementById('boostStatus').textContent = `Boost BL2P : ${stakingInfo.boostActive ? 'Actif' : 'Inactif'}`;
-        } catch (error) {
-          console.error('Erreur lors du chargement des infos de staking:', error);
-        }
-      }
-    }
-
-    document.getElementById('stakeBtn').onclick = async function() {
-      const amount = document.getElementById('stakeAmount').value;
-      if (window.ethereum && amount > 0) {
-        try {
-          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          const address = accounts[0];
-          const allowance = await contract.methods.allowance(address, contractAddress).call();
-          if (allowance < web3.utils.toWei(amount, 'ether')) {
-            await contract.methods.approve(contractAddress, web3.utils.toWei(amount, 'ether')).send({ from: address });
-          }
-          await contract.methods.stake(web3.utils.toWei(amount, 'ether')).send({ from: address });
-          alert('Staking effectué !');
-          loadStakingInfo();
-        } catch (error) {
-          console.error('Erreur lors du staking:', error);
-          alert('Erreur lors du staking.');
-        }
-      } else {
-        alert('Veuillez entrer un montant valide.');
-      }
-    };
-
-    document.getElementById('unstakeBtn').onclick = async function() {
-      if (window.ethereum) {
-        try {
-          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          const address = accounts[0];
-          await contract.methods.unstake().send({ from: address });
-          alert('Unstake effectué !');
-          loadStakingInfo();
-        } catch (error) {
-          console.error('Erreur lors de l’unstake:', error);
-          alert('Erreur lors de l’unstake.');
-        }
-      }
-    };
-
-    window.onload = loadStakingInfo;
-  </script>
-</body>
-</html>
+  <!-- Staking Benefits -->
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+    <h3 class="text-xl font-semibold text-purple-400 mb-4">Avantages du Staking TAAMS</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <h4 class="text-lg font-semibold text-green-400 mb-2">💎 Récompenses passives</h4>
+        <p class="text-gray-300">Gagnez des TAAMS automatiquement avec un APY compétitif de 15%.</p>
+      </div>
+      <div>
+        <h4 class="text-lg font-semibold text-blue-400 mb-2">🎯 Éligibilité exclusive</h4>
+        <p class="text-gray-300">Accédez à la roue de la fortune et aux événements spéciaux.</p>
+      </div>
+      <div>
+        <h4 class="text-lg font-semibold text-purple-400 mb-2">🗳️ Pouvoir de gouvernance</h4>
+        <p class="text-gray-300">Votez sur les propositions et façonnez l'avenir du protocole.</p>
+      </div>
+      <div>
+        <h4 class="text-lg font-semibold text-orange-400 mb-2">⚡ Boost BL2P</h4>
+        <p class="text-gray-300">Activez le boost BL2P pour augmenter vos récompenses de staking.</p>
+      </div>
+    </div>
+  </div>
+</div>

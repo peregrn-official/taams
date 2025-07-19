@@ -1,209 +1,43 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TAAMS - Tableau de bord des tests</title>
-  <meta name="description" content="Visualisez la stabilité du contrat intelligent TAAMS à travers les résultats des tests unitaires.">
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-    .fade-in { animation: fadeIn 1s ease-in; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  </style>
-</head>
-<body class="bg-gray-900 text-white">
-  <!-- Header -->
-  <header class="bg-gray-800 shadow fixed w-full top-0 z-10">
-    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-      <div class="flex items-center">
-        <img src="https://raw.githubusercontent.com/peregrn-official/taams/main/assets/logo.jpg" alt="Logo TAAMS" class="h-12 mr-3">
-        <span class="text-2xl font-bold text-purple-400">TAAMS</span>
-      </div>
-      <div class="flex items-center space-x-4">
-        <div id="mobileMenu" class="hidden md:flex space-x-6">
-          <a href="#/home" class="text-gray-300 hover:text-purple-400">Accueil</a>
-          <a href="#/dashboard" class="text-gray-300 hover:text-purple-400">Tableau de bord</a>
-          <a href="#/burn" class="text-gray-300 hover:text-purple-400">Burn</a>
-          <a href="#/wheel" class="text-gray-300 hover:text-purple-400">Roue</a>
-          <a href="#/stake" class="text-gray-300 hover:text-purple-400">Staking</a>
-          <a href="#/governance" class="text-gray-300 hover:text-purple-400">Gouvernance</a>
-          <a href="#/my-status" class="text-gray-300 hover:text-purple-400">Mon statut</a>
-        </div>
-        <p id="walletAddress" class="text-gray-300"></p>
-        <button id="connectWallet" class="bg-purple-500 text-white px-4 py-2 rounded-full">Connexion MetaMask</button>
-        <button id="mobileMenuBtn" class="md:hidden text-gray-300">☰</button>
-      </div>
-    </nav>
-  </header>
-
-  <!-- Main Content -->
-  <main class="pt-24">
-    <section id="dashboard" class="py-20 bg-gray-900">
-      <div class="container mx-auto px-6">
-        <h2 class="text-4xl font-bold text-center mb-10 text-purple-400 fade-in">Tableau de bord des tests</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
-            <h3 class="text-xl font-semibold text-green-400 mb-2">Tests réussis</h3>
-            <p id="successfulTests" class="text-3xl font-bold">0</p>
-          </div>
-          <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
-            <h3 class="text-xl font-semibold text-red-400 mb-2">Tests échoués</h3>
-            <p id="failedTests" class="text-3xl font-bold">0</p>
-          </div>
-          <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
-            <h3 class="text-xl font-semibold text-purple-400 mb-2">Dernier test</h3>
-            <p id="lastTestDate" class="text-lg">N/A</p>
-          </div>
-        </div>
-        <div class="mt-8">
-          <h3 class="text-xl font-semibold text-center mb-4">Progression des tests</h3>
-          <div class="w-full bg-gray-700 rounded-full h-4">
-            <div id="progressBar" class="bg-green-500 h-4 rounded-full" style="width: 0%"></div>
-          </div>
-        </div>
-        <canvas id="testChart" class="mt-8"></canvas>
-      </div>
-    </section>
-  </main>
-
-  <!-- Footer -->
-  <footer class="bg-gray-900 py-8">
-    <div class="container mx-auto px-6 text-center">
-      <p class="text-gray-300 mb-2">© 2025 TAAMS. Tous droits réservés.</p>
-      <p class="text-gray-300 mb-2">
-        <a href="https://github.com/peregrn-official/taams" target="_blank" class="text-purple-400 hover:text-purple-300">GitHub</a> |
-        <a href="#license" class="text-purple-400 hover:text-purple-300">Licence MIT</a>
-      </p>
-      <p class="text-sm text-gray-500">Avertissement : TAAMS est en développement. Faites vos propres recherches avant de participer.</p>
+<!-- Dashboard Page Content -->
+<div class="container mx-auto px-6 py-20">
+  <h2 class="text-4xl font-bold text-center mb-10 text-purple-400 fade-in">Tableau de bord des tests</h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
+      <h3 class="text-xl font-semibold text-green-400 mb-2">Tests réussis</h3>
+      <p id="successfulTests" class="text-3xl font-bold">0</p>
     </div>
-  </footer>
+    <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
+      <h3 class="text-xl font-semibold text-red-400 mb-2">Tests échoués</h3>
+      <p id="failedTests" class="text-3xl font-bold">0</p>
+    </div>
+    <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
+      <h3 class="text-xl font-semibold text-purple-400 mb-2">Dernier test</h3>
+      <p id="lastTestDate" class="text-lg">N/A</p>
+    </div>
+  </div>
 
-  <!-- JavaScript -->
-  <script>
-    // Simulated testResult.json data
-    const testData = {
-      totalTests: 100,
-      successfulTests: 95,
-      failedTests: 5,
-      lastTestDate: "2025-07-16T12:00:00Z"
-    };
+  <!-- Progress Bar -->
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg mt-8">
+    <h3 class="text-xl font-semibold text-purple-400 mb-4">Progression des tests</h3>
+    <div class="w-full bg-gray-700 rounded-full h-4">
+      <div id="progressBar" class="bg-green-500 h-4 rounded-full transition-all duration-500"></div>
+    </div>
+  </div>
 
-    // Mobile Menu
-    document.getElementById('mobileMenuBtn').onclick = () => {
-      document.getElementById('mobileMenu').classList.toggle('hidden');
-    };
+  <!-- Chart -->
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg mt-8">
+    <h3 class="text-xl font-semibold text-purple-400 mb-4">Résultats détaillés</h3>
+    <canvas id="testChart" width="400" height="200"></canvas>
+  </div>
 
-    // Wallet Connect
-    const web3 = new Web3(window.ethereum || 'https://rpc-mumbai.polygon.technology');
-    async function connectWallet() {
-      if (window.ethereum) {
-        try {
-          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          const address = accounts[0];
-          const balance = await web3.eth.getBalance(address);
-          document.getElementById('walletAddress').textContent = `Connecté : ${address.slice(0, 6)}...${address.slice(-4)} (${web3.utils.fromWei(balance, 'ether')} ETH)`;
-          document.getElementById('connectWallet').textContent = 'Connecté';
-          localStorage.setItem('walletAddress', address);
-
-          const message = "TAAMS - Identification Web3";
-          const signature = await window.ethereum.request({
-            method: 'personal_sign',
-            params: [message, address]
-          });
-          console.log('Signature:', signature);
-        } catch (error) {
-          console.error('Erreur lors de la connexion:', error);
-          alert('Erreur lors de la connexion à MetaMask.');
-        }
-      } else {
-        alert('MetaMask n’est pas installé !');
-      }
-    }
-
-    document.getElementById('connectWallet').onclick = connectWallet;
-
-    if (localStorage.getItem('walletAddress')) {
-      document.getElementById('walletAddress').textContent = `Connecté : ${localStorage.getItem('walletAddress').slice(0, 6)}...${localStorage.getItem('walletAddress').slice(-4)}`;
-      document.getElementById('connectWallet').textContent = 'Connecté';
-    }
-
-    // Load Test Results
-    async function loadTestResults() {
-      try {
-        // Simuler fetch de testResult.json
-        const data = testData;
-        document.getElementById('successfulTests').textContent = data.successfulTests;
-        document.getElementById('failedTests').textContent = data.failedTests;
-        document.getElementById('lastTestDate').textContent = new Date(data.lastTestDate).toLocaleDateString('fr-FR');
-        document.getElementById('progressBar').style.width = `${(data.successfulTests / data.totalTests) * 100}%`;
-
-        new Chart(document.getElementById('testChart'), {
-          type: 'bar',
-          data: {
-            labels: ['Tests réussis', 'Tests échoués'],
-            datasets: [{
-              label: 'Résultats des tests',
-              data: [data.successfulTests, data.failedTests],
-              backgroundColor: ['#10B981', '#EF4444'],
-              borderColor: ['#10B981', '#EF4444'],
-              borderWidth: 1
-            }]
-          },
-          options: {
-            indexAxis: 'y',
-            scales: { x: { beginAtZero: true, max: data.totalTests, title: { display: true, text: 'Nombre de tests' } } },
-            plugins: { legend: { display: false }, title: { display: true, text: 'Résultats des tests unitaires' } }
-          }
-        });
-      } catch (error) {
-        console.error('Erreur lors du chargement des résultats des tests:', error);
-      }
-    }
-
-    window.onload = loadTestResults;
-  </script>
-</body>
-</html>
+  <!-- Test Details -->
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg mt-8">
+    <h3 class="text-xl font-semibold text-purple-400 mb-4">Détails des tests</h3>
+    <div class="text-gray-300">
+      <p class="mb-2">🧪 <strong>Tests unitaires :</strong> Vérification des fonctions de base du contrat</p>
+      <p class="mb-2">🔒 <strong>Tests de sécurité :</strong> Contrôle des vulnérabilités et attaques</p>
+      <p class="mb-2">⚡ <strong>Tests de performance :</strong> Optimisation des coûts en gas</p>
+      <p class="mb-2">🔄 <strong>Tests d'intégration :</strong> Compatibilité avec l'écosystème DeFi</p>
+    </div>
+  </div>
+</div>

@@ -1,160 +1,186 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
+<!-- Governance Page Content -->
+<div class="container mx-auto px-6 py-20">
+  <h1 class="text-4xl font-bold text-center mb-10 text-purple-400">🏛️ Gouvernance TAAMS</h1>
+  
+  <!-- Governance Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+      <h3 class="text-lg font-semibold text-blue-400 mb-2">Pouvoir de Vote</h3>
+      <p id="votingPower" class="text-2xl font-bold text-white">0</p>
+      <p class="text-gray-400 text-sm">Basé sur votre stake</p>
+    </div>
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+      <h3 class="text-lg font-semibold text-green-400 mb-2">Propositions Actives</h3>
+      <p class="text-2xl font-bold text-white">3</p>
+      <p class="text-gray-400 text-sm">En cours de vote</p>
+    </div>
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+      <h3 class="text-lg font-semibold text-purple-400 mb-2">Participation</h3>
+      <p class="text-2xl font-bold text-white">67%</p>
+      <p class="text-gray-400 text-sm">Taux de participation</p>
+    </div>
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+      <h3 class="text-lg font-semibold text-orange-400 mb-2">Vos Votes</h3>
+      <p id="userVotes" class="text-2xl font-bold text-white">0</p>
+      <p class="text-gray-400 text-sm">Propositions votées</p>
+    </div>
+  </div>
 
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TAAMS - Gouvernance</title>
-  <meta name="description" content="Participez à la gouvernance décentralisée de TAAMS en votant sur les propositions.">
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-    .fade-in { animation: fadeIn 1s ease-in; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  </style>
-</head>
-<body class="bg-gray-900 text-white">
-  <!-- Header -->
-  <header class="bg-gray-800 shadow fixed w-full top-0 z-10">
-    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-      <div class="flex items-center">
-        <img src="https://raw.githubusercontent.com/peregrn-official/taams/main/assets/logo.jpg" alt="Logo TAAMS" class="h-12 mr-3">
-        <span class="text-2xl font-bold text-purple-400">TAAMS</span>
-      </div>
-      <div class="flex items-center space-x-4">
-        <div id="mobileMenu" class="hidden md:flex space-x-6">
-          <a href="#/home" class="text-gray-300 hover:text-purple-400">Accueil</a>
-          <a href="#/dashboard" class="text-gray-300 hover:text-purple-400">Tableau de bord</a>
-          <a href="#/burn" class="text-gray-300 hover:text-purple-400">Burn</a>
-          <a href="#/wheel" class="text-gray-300 hover:text-purple-400">Roue</a>
-          <a href="#/stake" class="text-gray-300 hover:text-purple-400">Staking</a>
-          <a href="#/governance" class="text-gray-300 hover:text-purple-400">Gouvernance</a>
-          <a href="#/my-status" class="text-gray-300 hover:text-purple-400">Mon statut</a>
+  <!-- Active Proposals -->
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+    <h3 class="text-xl font-semibold text-purple-400 mb-6">📋 Propositions Actives</h3>
+    
+    <!-- Proposal 1 -->
+    <div class="border border-gray-700 rounded-lg p-6 mb-6">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h4 class="text-lg font-semibold text-white mb-2">TAP-001: Augmentation de l'APY de staking à 20%</h4>
+          <p class="text-gray-300">Proposition d'augmenter le rendement de staking pour attirer plus de liquidité dans le protocole.</p>
         </div>
-        <p id="walletAddress" class="text-gray-300"></p>
-        <button id="connectWallet" class="bg-purple-500 text-white px-4 py-2 rounded-full">Connexion MetaMask</button>
-        <button id="mobileMenuBtn" class="md:hidden text-gray-300">☰</button>
+        <span class="bg-green-600 text-white px-3 py-1 rounded-full text-sm">Actif</span>
       </div>
-    </nav>
-  </header>
-
-  <!-- Main Content -->
-  <main class="pt-24">
-    <section id="governance" class="py-20 bg-gray-900">
-      <div class="container mx-auto px-6">
-        <h2 class="text-4xl font-bold text-center mb-10 text-purple-400 fade-in">Gouvernance</h2>
-        <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
-          <h3 class="text-2xl font-semibold text-purple-400 mb-4">Votez en gouvernance</h3>
-          <p class="text-gray-300 mb-4">Façonnez le protocole avec votre vote.</p>
-          <div class="text-lg text-gray-300">Proposition #1 : Augmenter les récompenses</div>
-          <div class="flex justify-center space-x-4 mt-4">
-            <button id="voteForBtn" class="bg-green-500 text-white px-4 py-2 rounded-full">Pour</button>
-            <button id="voteAgainstBtn" class="bg-red-500 text-white px-4 py-2 rounded-full">Contre</button>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <p class="text-sm text-gray-400">Votes POUR: <span class="text-green-400 font-semibold">156,789 TAAMS</span></p>
+          <div class="w-full bg-gray-700 rounded-full h-2 mt-1">
+            <div class="bg-green-500 h-2 rounded-full" style="width: 65%"></div>
+          </div>
+        </div>
+        <div>
+          <p class="text-sm text-gray-400">Votes CONTRE: <span class="text-red-400 font-semibold">84,321 TAAMS</span></p>
+          <div class="w-full bg-gray-700 rounded-full h-2 mt-1">
+            <div class="bg-red-500 h-2 rounded-full" style="width: 35%"></div>
           </div>
         </div>
       </div>
-    </section>
-  </main>
-
-  <!-- Footer -->
-  <footer class="bg-gray-900 py-8">
-    <div class="container mx-auto px-6 text-center">
-      <p class="text-gray-300 mb-2">© 2025 TAAMS. Tous droits réservés.</p>
-      <p class="text-gray-300 mb-2">
-        <a href="https://github.com/peregrn-official/taams" target="_blank" class="text-purple-400 hover:text-purple-300">GitHub</a> |
-        <a href="#license" class="text-purple-400 hover:text-purple-300">Licence MIT</a>
-      </p>
-      <p class="text-sm text-gray-500">Avertissement : TAAMS est en développement. Faites vos propres recherches avant de participer.</p>
+      
+      <div class="flex gap-4">
+        <button id="voteForBtn" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+          👍 Voter POUR
+        </button>
+        <button id="voteAgainstBtn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+          👎 Voter CONTRE
+        </button>
+      </div>
+      <p class="text-xs text-gray-500 mt-2">Se termine dans 5 jours • Quorum requis: 500,000 TAAMS</p>
     </div>
-  </footer>
 
-  <!-- JavaScript -->
-  <script>
-    const web3 = new Web3(window.ethereum || 'https://rpc-mumbai.polygon.technology');
+    <!-- Proposal 2 -->
+    <div class="border border-gray-700 rounded-lg p-6 mb-6">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h4 class="text-lg font-semibold text-white mb-2">TAP-002: Intégration NFT Marketplace</h4>
+          <p class="text-gray-300">Développement d'une marketplace intégrée pour échanger les NFT obtenus via la roue de la fortune.</p>
+        </div>
+        <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm">En discussion</span>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <p class="text-sm text-gray-400">Votes POUR: <span class="text-green-400 font-semibold">89,456 TAAMS</span></p>
+          <div class="w-full bg-gray-700 rounded-full h-2 mt-1">
+            <div class="bg-green-500 h-2 rounded-full" style="width: 78%"></div>
+          </div>
+        </div>
+        <div>
+          <p class="text-sm text-gray-400">Votes CONTRE: <span class="text-red-400 font-semibold">25,123 TAAMS</span></p>
+          <div class="w-full bg-gray-700 rounded-full h-2 mt-1">
+            <div class="bg-red-500 h-2 rounded-full" style="width: 22%"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex gap-4">
+        <button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+          👍 Voter POUR
+        </button>
+        <button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+          👎 Voter CONTRE
+        </button>
+      </div>
+      <p class="text-xs text-gray-500 mt-2">Se termine dans 12 jours • Quorum requis: 500,000 TAAMS</p>
+    </div>
 
-    // Mobile Menu
-    document.getElementById('mobileMenuBtn').onclick = () => {
-      document.getElementById('mobileMenu').classList.toggle('hidden');
-    };
+    <!-- Proposal 3 -->
+    <div class="border border-gray-700 rounded-lg p-6">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h4 class="text-lg font-semibold text-white mb-2">TAP-003: Partenariat avec protocoles DeFi</h4>
+          <p class="text-gray-300">Établir des partenariats stratégiques avec d'autres protocoles DeFi sur Polygon pour l'interopérabilité.</p>
+        </div>
+        <span class="bg-yellow-600 text-white px-3 py-1 rounded-full text-sm">Nouveau</span>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <p class="text-sm text-gray-400">Votes POUR: <span class="text-green-400 font-semibold">34,567 TAAMS</span></p>
+          <div class="w-full bg-gray-700 rounded-full h-2 mt-1">
+            <div class="bg-green-500 h-2 rounded-full" style="width: 52%"></div>
+          </div>
+        </div>
+        <div>
+          <p class="text-sm text-gray-400">Votes CONTRE: <span class="text-red-400 font-semibold">31,789 TAAMS</span></p>
+          <div class="w-full bg-gray-700 rounded-full h-2 mt-1">
+            <div class="bg-red-500 h-2 rounded-full" style="width: 48%"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex gap-4">
+        <button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+          👍 Voter POUR
+        </button>
+        <button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+          👎 Voter CONTRE
+        </button>
+      </div>
+      <p class="text-xs text-gray-500 mt-2">Se termine dans 18 jours • Quorum requis: 500,000 TAAMS</p>
+    </div>
+  </div>
 
-    // Wallet Connect
-    async function connectWallet() {
-      if (window.ethereum) {
-        try {
-          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          const address = accounts[0];
-          const balance = await web3.eth.getBalance(address);
-          document.getElementById('walletAddress').textContent = `Connecté : ${address.slice(0, 6)}...${address.slice(-4)} (${web3.utils.fromWei(balance, 'ether')} ETH)`;
-          document.getElementById('connectWallet').textContent = 'Connecté';
-          localStorage.setItem('walletAddress', address);
+  <!-- Create Proposal -->
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+    <h3 class="text-xl font-semibold text-purple-400 mb-4">📝 Créer une Proposition</h3>
+    <p class="text-gray-300 mb-4">Vous devez avoir au moins 10,000 TAAMS stakés pour créer une proposition.</p>
+    
+    <div class="space-y-4">
+      <div>
+        <label for="proposalTitle" class="block text-sm font-medium text-gray-400 mb-2">Titre de la proposition</label>
+        <input type="text" id="proposalTitle" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white" placeholder="TAP-XXX: Titre de votre proposition">
+      </div>
+      <div>
+        <label for="proposalDescription" class="block text-sm font-medium text-gray-400 mb-2">Description détaillée</label>
+        <textarea id="proposalDescription" rows="4" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white" placeholder="Décrivez votre proposition en détail..."></textarea>
+      </div>
+      <button id="createProposalBtn" class="bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600 transition-colors">
+        🚀 Soumettre la Proposition
+      </button>
+    </div>
+  </div>
 
-          const message = "TAAMS - Identification Web3";
-          const signature = await window.ethereum.request({
-            method: 'personal_sign',
-            params: [message, address]
-          });
-          console.log('Signature:', signature);
-        } catch (error) {
-          console.error('Erreur lors de la connexion:', error);
-          alert('Erreur lors de la connexion à MetaMask.');
-        }
-      } else {
-        alert('MetaMask n’est pas installé !');
-      }
-    }
-
-    document.getElementById('connectWallet').onclick = connectWallet;
-
-    if (localStorage.getItem('walletAddress')) {
-      document.getElementById('walletAddress').textContent = `Connecté : ${localStorage.getItem('walletAddress').slice(0, 6)}...${localStorage.getItem('walletAddress').slice(-4)}`;
-      document.getElementById('connectWallet').textContent = 'Connecté';
-    }
-
-    // Governance (Demo)
-    document.getElementById('voteForBtn').onclick = () => alert('Vous avez voté POUR la proposition !');
-    document.getElementById('voteAgainstBtn').onclick = () => alert('Vous avez voté CONTRE la proposition !');
-
-    window.onload = () => {};
-  </script>
-</body>
-</html>
+  <!-- Governance Guide -->
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+    <h3 class="text-xl font-semibold text-purple-400 mb-4">📖 Guide de la Gouvernance</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <h4 class="text-lg font-semibold text-blue-400 mb-2">🗳️ Comment voter</h4>
+        <ul class="text-gray-300 space-y-1 text-sm">
+          <li>• Vous devez avoir des TAAMS stakés pour voter</li>
+          <li>• Votre pouvoir de vote = montant staké</li>
+          <li>• Un vote par proposition et par wallet</li>
+          <li>• Les votes sont définitifs une fois soumis</li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-lg font-semibold text-green-400 mb-2">📋 Créer une proposition</h4>
+        <ul class="text-gray-300 space-y-1 text-sm">
+          <li>• Minimum 10,000 TAAMS stakés requis</li>
+          <li>• Période de discussion de 3 jours</li>
+          <li>• Période de vote de 7 jours</li>
+          <li>• Quorum de 500,000 TAAMS pour validation</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

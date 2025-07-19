@@ -1,197 +1,148 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TAAMS - Mon Statut</title>
-  <meta name="description" content="Consultez votre solde TAAMS, BL2P et votre historique de spins.">
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-    .fade-in { animation: fadeIn 1s ease-in; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  </style>
-</head>
-<body class="bg-gray-900 text-white">
-  <!-- Header -->
-  <header class="bg-gray-800 shadow fixed w-full top-0 z-10">
-    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-      <div class="flex items-center">
-        <img src="https://raw.githubusercontent.com/peregrn-official/taams/main/assets/logo.jpg" alt="Logo TAAMS" class="h-12 mr-3">
-        <span class="text-2xl font-bold text-purple-400">TAAMS</span>
-      </div>
-      <div class="flex items-center space-x-4">
-        <div id="mobileMenu" class="hidden md:flex space-x-6">
-          <a href="#/home" class="text-gray-300 hover:text-purple-400">Accueil</a>
-          <a href="#/dashboard" class="text-gray-300 hover:text-purple-400">Tableau de bord</a>
-          <a href="#/burn" class="text-gray-300 hover:text-purple-400">Burn</a>
-          <a href="#/wheel" class="text-gray-300 hover:text-purple-400">Roue</a>
-          <a href="#/stake" class="text-gray-300 hover:text-purple-400">Staking</a>
-          <a href="#/governance" class="text-gray-300 hover:text-purple-400">Gouvernance</a>
-          <a href="#/my-status" class="text-gray-300 hover:text-purple-400">Mon statut</a>
-        </div>
-        <p id="walletAddress" class="text-gray-300"></p>
-        <button id="connectWallet" class="bg-purple-500 text-white px-4 py-2 rounded-full">Connexion MetaMask</button>
-        <button id="mobileMenuBtn" class="md:hidden text-gray-300">☰</button>
-      </div>
-    </nav>
-  </header>
-
-  <!-- Main Content -->
-  <main class="pt-24">
-    <section id="my-status" class="py-20 bg-gray-900">
-      <div class="container mx-auto px-6">
-        <h2 class="text-4xl font-bold text-center mb-10 text-purple-400 fade-in">Mon Statut TAAMS</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
-            <h3 class="text-xl font-semibold text-purple-400 mb-2">Solde TAAMS</h3>
-            <p id="taamsBalance" class="text-3xl font-bold">0 TAAMS</p>
-          </div>
-          <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
-            <h3 class="text-xl font-semibold text-purple-400 mb-2">Solde BL2P</h3>
-            <p id="bl2pBalance" class="text-3xl font-bold">0 BL2P</p>
-          </div>
-          <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
-            <h3 class="text-xl font-semibold text-purple-400 mb-2">Nombre de spins</h3>
-            <p id="spinCount" class="text-3xl font-bold">0</p>
-          </div>
-        </div>
-        <div class="mt-8">
-          <h3 class="text-xl font-semibold text-center mb-4">Historique des spins</h3>
-          <ul id="spinHistory" class="text-gray-300 list-disc list-inside"></ul>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Footer -->
-  <footer class="bg-gray-900 py-8">
-    <div class="container mx-auto px-6 text-center">
-      <p class="text-gray-300 mb-2">© 2025 TAAMS. Tous droits réservés.</p>
-      <p class="text-gray-300 mb-2">
-        <a href="https://github.com/peregrn-official/taams" target="_blank" class="text-purple-400 hover:text-purple-300">GitHub</a> |
-        <a href="#license" class="text-purple-400 hover:text-purple-300">Licence MIT</a>
-      </p>
-      <p class="text-sm text-gray-500">Avertissement : TAAMS est en développement. Faites vos propres recherches avant de participer.</p>
+<!-- My Status Page Content -->
+<div class="container mx-auto px-6 py-20">
+  <h1 class="text-4xl font-bold text-center mb-10 text-purple-400">👤 Mon Statut TAAMS</h1>
+  
+  <!-- User Overview -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+      <h3 class="text-lg font-semibold text-purple-400 mb-2">Solde TAAMS</h3>
+      <p id="taamsBalance" class="text-2xl font-bold text-white">0 TAAMS</p>
+      <p class="text-gray-400 text-sm">Dans votre wallet</p>
     </div>
-  </footer>
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+      <h3 class="text-lg font-semibold text-blue-400 mb-2">Solde BL2P</h3>
+      <p id="bl2pBalance" class="text-2xl font-bold text-white">0 BL2P</p>
+      <p class="text-gray-400 text-sm">Tokens de boost</p>
+    </div>
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+      <h3 class="text-lg font-semibold text-green-400 mb-2">En Staking</h3>
+      <p id="stakingBalance" class="text-2xl font-bold text-white">0 TAAMS</p>
+      <p class="text-gray-400 text-sm">Génère des récompenses</p>
+    </div>
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+      <h3 class="text-lg font-semibold text-orange-400 mb-2">NFT Collection</h3>
+      <p id="nftCount" class="text-2xl font-bold text-white">0</p>
+      <p class="text-gray-400 text-sm">NFTs possédés</p>
+    </div>
+  </div>
 
-  <!-- JavaScript -->
-  <script>
-    const web3 = new Web3(window.ethereum || 'https://rpc-mumbai.polygon.technology');
-    const contractAddress = '0x...'; // Remplacer par l'adresse du contrat
-    const contractABI = [
-      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "balanceOf", "outputs": [{ "type": "uint256" }], "type": "function" },
-      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "balanceOfBL2P", "outputs": [{ "type": "uint256" }], "type": "function" }
-    ];
-    const contract = new web3.eth.Contract(contractABI, contractAddress);
+  <!-- Activity Summary -->
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+    <h3 class="text-xl font-semibold text-purple-400 mb-6">📊 Résumé d'Activité</h3>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Spins History -->
+      <div>
+        <h4 class="text-lg font-semibold text-blue-400 mb-4">🎰 Historique des Spins</h4>
+        <div class="bg-gray-700 p-4 rounded-lg">
+          <p class="text-sm text-gray-400 mb-2">Total des spins: <span id="spinCount" class="text-white font-semibold">0</span></p>
+          <div class="max-h-32 overflow-y-auto">
+            <ul id="spinHistory" class="text-sm text-gray-300 space-y-1">
+              <li>Aucun spin effectué</li>
+            </ul>
+          </div>
+        </div>
+      </div>
 
-    // Mobile Menu
-    document.getElementById('mobileMenuBtn').onclick = () => {
-      document.getElementById('mobileMenu').classList.toggle('hidden');
-    };
+      <!-- Staking History -->
+      <div>
+        <h4 class="text-lg font-semibold text-green-400 mb-4">💰 Historique de Staking</h4>
+        <div class="bg-gray-700 p-4 rounded-lg">
+          <p class="text-sm text-gray-400 mb-2">Récompenses totales: <span id="totalEarned" class="text-green-400 font-semibold">0 TAAMS</span></p>
+          <p class="text-sm text-gray-400 mb-2">Durée de staking: <span id="stakingDuration" class="text-white font-semibold">0 jours</span></p>
+          <p class="text-sm text-gray-400">APY moyen: <span id="averageAPY" class="text-blue-400 font-semibold">15%</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    // Wallet Connect
-    async function connectWallet() {
-      if (window.ethereum) {
-        try {
-          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          const address = accounts[0];
-          const balance = await web3.eth.getBalance(address);
-          document.getElementById('walletAddress').textContent = `Connecté : ${address.slice(0, 6)}...${address.slice(-4)} (${web3.utils.fromWei(balance, 'ether')} ETH)`;
-          document.getElementById('connectWallet').textContent = 'Connecté';
-          localStorage.setItem('walletAddress', address);
+  <!-- User Level & Achievements -->
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+    <h3 class="text-xl font-semibold text-purple-400 mb-6">🏆 Niveau et Achievements</h3>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- User Level -->
+      <div>
+        <h4 class="text-lg font-semibold text-orange-400 mb-4">📈 Niveau Utilisateur</h4>
+        <div class="bg-gray-700 p-4 rounded-lg">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-white font-semibold">Niveau 1 - Débutant</span>
+            <span class="text-orange-400">0/1000 XP</span>
+          </div>
+          <div class="w-full bg-gray-600 rounded-full h-3">
+            <div class="bg-orange-500 h-3 rounded-full" style="width: 0%"></div>
+          </div>
+          <p class="text-xs text-gray-400 mt-2">Stakez plus pour gagner de l'XP et débloquer des avantages</p>
+        </div>
+      </div>
 
-          const message = "TAAMS - Identification Web3";
-          const signature = await window.ethereum.request({
-            method: 'personal_sign',
-            params: [message, address]
-          });
-          console.log('Signature:', signature);
-        } catch (error) {
-          console.error('Erreur lors de la connexion:', error);
-          alert('Erreur lors de la connexion à MetaMask.');
-        }
-      } else {
-        alert('MetaMask n’est pas installé !');
-      }
-    }
+      <!-- Achievements -->
+      <div>
+        <h4 class="text-lg font-semibold text-yellow-400 mb-4">🎖️ Achievements</h4>
+        <div class="bg-gray-700 p-4 rounded-lg">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-gray-400">🥉 Premier Stake</span>
+              <span class="text-gray-500">Non débloqué</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-400">🎰 Premier Spin</span>
+              <span class="text-gray-500">Non débloqué</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-400">🗳️ Premier Vote</span>
+              <span class="text-gray-500">Non débloqué</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-400">🔥 Premier Burn</span>
+              <span class="text-gray-500">Non débloqué</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    document.getElementById('connectWallet').onclick = connectWallet;
+  <!-- Transaction History -->
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+    <h3 class="text-xl font-semibold text-purple-400 mb-6">📋 Historique des Transactions</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-gray-300">
+        <thead class="text-xs text-gray-400 uppercase border-b border-gray-700">
+          <tr>
+            <th class="px-6 py-3 text-left">Type</th>
+            <th class="px-6 py-3 text-left">Montant</th>
+            <th class="px-6 py-3 text-left">Date</th>
+            <th class="px-6 py-3 text-left">Statut</th>
+          </tr>
+        </thead>
+        <tbody id="transactionHistory">
+          <tr class="border-b border-gray-700">
+            <td colspan="4" class="px-6 py-4 text-center text-gray-500">Aucune transaction trouvée</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-    if (localStorage.getItem('walletAddress')) {
-      document.getElementById('walletAddress').textContent = `Connecté : ${localStorage.getItem('walletAddress').slice(0, 6)}...${localStorage.getItem('walletAddress').slice(-4)}`;
-      document.getElementById('connectWallet').textContent = 'Connecté';
-    }
-
-    // Load User Status
-    async function loadUserStatus() {
-      if (window.ethereum) {
-        try {
-          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          const address = accounts[0];
-          const taamsBalance = await contract.methods.balanceOf(address).call() || '0';
-          const bl2pBalance = await contract.methods.balanceOfBL2P(address).call() || '0';
-          document.getElementById('taamsBalance').textContent = `${web3.utils.fromWei(taamsBalance, 'ether')} TAAMS`;
-          document.getElementById('bl2pBalance').textContent = `${web3.utils.fromWei(bl2pBalance, 'ether')} BL2P`;
-
-          const spinHistory = JSON.parse(localStorage.getItem('spinHistory') || '[]');
-          document.getElementById('spinCount').textContent = spinHistory.length;
-          const spinList = document.getElementById('spinHistory');
-          spinList.innerHTML = '';
-          spinHistory.forEach(spin => {
-            const li = document.createElement('li');
-            li.textContent = `Spin : ${spin.result} le ${new Date(spin.date).toLocaleDateString('fr-FR')}`;
-            spinList.appendChild(li);
-          });
-        } catch (error) {
-          console.error('Erreur lors du chargement du statut:', error);
-        }
-      }
-    }
-
-    window.onload = loadUserStatus;
-  </script>
-</body>
-</html>
+  <!-- Quick Actions -->
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+    <h3 class="text-xl font-semibold text-purple-400 mb-6">⚡ Actions Rapides</h3>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <a href="#/stake" class="bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg text-center transition-colors">
+        <div class="text-2xl mb-2">💰</div>
+        <div class="text-sm font-semibold">Staker</div>
+      </a>
+      <a href="#/wheel" class="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-lg text-center transition-colors">
+        <div class="text-2xl mb-2">🎰</div>
+        <div class="text-sm font-semibold">Roue</div>
+      </a>
+      <a href="#/burn" class="bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-lg text-center transition-colors">
+        <div class="text-2xl mb-2">🔥</div>
+        <div class="text-sm font-semibold">Burn</div>
+      </a>
+      <a href="#/governance" class="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg text-center transition-colors">
+        <div class="text-2xl mb-2">🗳️</div>
+        <div class="text-sm font-semibold">Vote</div>
+      </a>
+    </div>
+  </div>
+</div>
