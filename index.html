@@ -1,1146 +1,502 @@
-<!DOCTYPE html>
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TAAMS - Staking, Gouvernance & Roue</title>
-    <meta name="description" content="Application pour interagir avec le contrat TAAMS sur MegaETH testnet">
-    <meta name="theme-color" content="#1a202c">
-    <link rel="icon" href="/icon.png">
-    <link rel="apple-touch-icon" href="/icon.png">
-    <link rel="manifest" href="/manifest.json">
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Ethers.js -->
-    <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
-    
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            scroll-behavior: smooth;
-        }
-        .modal {
-            transition: opacity 0.3s ease;
-        }
-        canvas {
-            border: 2px solid #4a5568;
-            border-radius: 50%;
-        }
-        @media (max-width: 640px) {
-            canvas {
-                width: 250px !important;
-                height: 250px !important;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TAAMS - Polygon DeFi Burn & NFT Protocol</title>
+  <meta name="description" content="TAAMS est un protocole DeFi gamifié sur Polygon. Stakez, brûlez, gagnez des récompenses et évoluez vos NFTs en chaîne.">
+  <meta name="keywords" content="TAAMS, DeFi Polygon, NFT staking, crypto burn, smart contract, reward wheel">
+  <meta name="author" content="peregrn-official">
+  <meta name="robots" content="index, follow">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .hero-bg { background: linear-gradient(135deg, #7C3AED, #00B4D8); }
+    .animate-spin-slow { animation: spin 3s linear; }
+    .animate-pulse-slow { animation: pulse 3s ease-in-out infinite; }
+    .fade-in { animation: fadeIn 1s ease-in; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .feature-card:hover { transform: translateY(-5px); transition: transform 0.3s ease; }
+    .timeline-item { position: relative; padding-left: 2rem; }
+    .timeline-item::before { content: ''; position: absolute; left: 0; top: 0; width: 10px; height: 10px; background: #7C3AED; border-radius: 50%; }
+  </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen">
-    <!-- Navigation -->
-    <nav class="bg-gray-800 p-4 fixed w-full top-0 z-10 shadow-lg">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-purple-400">TAAMS</h1>
-            <div class="flex items-center space-x-4">
-                <div id="wallet-info" class="hidden">
-                    <span id="wallet-address" class="text-sm bg-gray-700 px-3 py-1 rounded-full"></span>
-                </div>
-                <button id="connect-wallet" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
-                    Connect Wallet
-                </button>
-            </div>
+<body class="bg-gray-900 text-white">
+  <!-- Header -->
+  <header class="bg-gray-800 shadow fixed w-full top-0 z-10">
+    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center">
+        <img src="https://raw.githubusercontent.com/peregrn-official/taams/main/assets/logo.jpg" alt="Logo TAAMS" class="h-12 mr-3">
+        <span class="text-2xl font-bold text-purple-400">TAAMS</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <div id="mobileMenu" class="hidden md:flex space-x-6">
+          <a href="index.html" class="text-gray-300 hover:text-purple-400">Accueil</a>
+          <a href="dashboard.html" class="text-gray-300 hover:text-purple-400">Tableau de bord</a>
+          <a href="burn.html" class="text-gray-300 hover:text-purple-400">Burn</a>
+          <a href="#/wheel" class="text-gray-300 hover:text-purple-400">Roue</a>
+          <a href="#/stake" class="text-gray-300 hover:text-purple-400">Staking</a>
+          <a href="#/governance" class="text-gray-300 hover:text-purple-400">Gouvernance</a>
+          <a href="#/my-status" class="text-gray-300 hover:text-purple-400">Mon statut</a>
         </div>
+        <p id="walletAddress" class="text-gray-300"></p>
+        <button id="connectWallet" class="bg-purple-500 text-white px-4 py-2 rounded-full">Connexion MetaMask</button>
+        <button id="mobileMenuBtn" class="md:hidden text-gray-300">☰</button>
+      </div>
     </nav>
+  </header>
 
-    <!-- Hero Section -->
-    <section class="pt-24 pb-12 md:pt-32 md:pb-20 flex items-center justify-center bg-gradient-to-r from-purple-600 to-blue-600">
-        <div class="container mx-auto text-center px-4">
-            <h2 class="text-4xl md:text-5xl font-extrabold mb-4">TAAMS Platform</h2>
-            <p class="text-lg md:text-xl mb-6">Staking, burn, gouvernance et roue Web3 sur MegaETH</p>
-            <button id="scroll-to-interact" class="bg-white text-purple-600 font-bold py-3 px-6 rounded-lg hover:bg-gray-200 transition">
-                Commencer
-            </button>
+  <!-- Main Content -->
+  <main class="pt-24">
+    <!-- Home -->
+    <section id="home" class="py-20 bg-gray-900">
+      <div class="hero-bg py-20 text-center min-h-screen flex items-center justify-center">
+        <div class="container mx-auto px-6 fade-in">
+          <h1 class="text-5xl md:text-6xl font-extrabold mb-4">TAAMS : La DeFi réinventée sur Polygon</h1>
+          <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">Découvrez un protocole décentralisé combinant tokenomics innovants, gouvernance communautaire et récompenses ludiques.</p>
+          <a href="#/my-status" class="bg-purple-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-purple-600">Rejoindre le mouvement</a>
         </div>
+      </div>
+
+      <!-- About TAAMS -->
+      <div class="container mx-auto px-6 py-20">
+        <h2 class="text-4xl font-bold text-center mb-10 text-purple-400 fade-in">Qu'est-ce que TAAMS ?</h2>
+        <p class="text-lg text-gray-300 mb-8 max-w-3xl mx-auto text-center">TAAMS est un protocole DeFi de nouvelle génération sur Polygon, qui renforce ses utilisateurs grâce à un écosystème robuste basé sur le jeton ERC-20. Avec des fonctionnalités telles que la destruction de jetons, le staking et une gouvernance décentralisée, TAAMS est conçu pour encourager la participation de la communauté et créer de la valeur sur le long terme.</p>
+        
+        <h3 class="text-2xl font-semibold text-center mb-6 text-purple-400">Pourquoi choisir TAAMS ?</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="bg-gray-800 p-6 rounded-lg shadow-lg feature-card">
+            <h4 class="text-xl font-semibold text-purple-400 mb-2">Tokenomics dynamiques</h4>
+            <p class="text-gray-300">Participez à un mécanisme de burn pour augmenter la rareté et la valeur du jeton.</p>
+          </div>
+          <div class="bg-gray-800 p-6 rounded-lg shadow-lg feature-card">
+            <h4 class="text-xl font-semibold text-purple-400 mb-2">Staking avantageux</h4>
+            <p class="text-gray-300">Stakez vos jetons pour obtenir des récompenses compétitives et soutenir l’écosystème.</p>
+          </div>
+          <div class="bg-gray-800 p-6 rounded-lg shadow-lg feature-card">
+            <h4 class="text-xl font-semibold text-purple-400 mb-2">Gouvernance communautaire</h4>
+            <p class="text-gray-300">Votez sur les propositions pour façonner l’avenir du protocole.</p>
+          </div>
+          <div class="bg-gray-800 p-6 rounded-lg shadow-lg feature-card">
+            <h4 class="text-xl font-semibold text-purple-400 mb-2">Récompenses ludiques</h4>
+            <p class="text-gray-300">Participez à un système de récompenses unique pour les jetons et les NFT.</p>
+          </div>
+          <div class="bg-gray-800 p-6 rounded-lg shadow-lg feature-card">
+            <h4 class="text-xl font-semibold text-purple-400 mb-2">Programme de parrainage</h4>
+            <p class="text-gray-300">Invitez vos amis et gagnez des récompenses en développant la communauté.</p>
+          </div>
+          <div class="bg-gray-800 p-6 rounded-lg shadow-lg feature-card">
+            <h4 class="text-xl font-semibold text-purple-400 mb-2">Compatible DeFi & NFT</h4>
+            <p class="text-gray-300">Pensé pour une intégration optimale avec les écosystèmes DeFi et NFT.</p>
+          </div>
+        </div>
+
+        <h3 class="text-2xl font-semibold text-center mt-12 mb-6 text-purple-400">Feuille de route (Roadmap)</h3>
+        <div class="max-w-3xl mx-auto">
+          <div class="timeline-item mb-6">
+            <h4 class="text-xl font-semibold text-purple-400">Q3 2025</h4>
+            <ul class="text-gray-300 list-disc list-inside">
+              <li>Lancement du site TAAMS</li>
+              <li>Démo interactive (staking, roue, vote)</li>
+              <li>Développement du smart contract</li>
+            </ul>
+          </div>
+          <div class="timeline-item mb-6">
+            <h4 class="text-xl font-semibold text-purple-400">Q4 2025</h4>
+            <ul class="text-gray-300 list-disc list-inside">
+              <li>Tests sur testnet Polygon</li>
+              <li>Audit de sécurité</li>
+              <li>Ouverture à la communauté (bêta test)</li>
+            </ul>
+          </div>
+          <div class="timeline-item">
+            <h4 class="text-xl font-semibold text-purple-400">2026 et après</h4>
+            <ul class="text-gray-300 list-disc list-inside">
+              <li>Lancement officiel sur mainnet</li>
+              <li>Ajout des NFT et de la gamification</li>
+              <li>Nouvelles fonctionnalités DeFi</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 class="text-2xl font-semibold text-center mt-12 mb-6 text-purple-400">Rejoignez la communauté TAAMS</h3>
+        <p class="text-lg text-gray-300 mb-8 max-w-3xl mx-auto text-center">Prêt à investir ou à collaborer avec TAAMS ? Contactez-nous via nos réseaux ou directement par mail.</p>
+        <div class="flex justify-center space-x-4">
+          <a href="mailto:contact@taams.org" class="bg-purple-500 text-white px-6 py-3 rounded-full hover:bg-purple-600">Nous contacter</a>
+          <a href="#/governance" class="bg-green-500 text-white px-6 py-3 rounded-full hover:bg-green-600">Devenir partenaire</a>
+        </div>
+      </div>
     </section>
 
-    <!-- Main Content -->
-    <main id="interact" class="container mx-auto px-4 py-12 mt-8">
-        <h2 class="text-3xl md:text-4xl font-bold text-center mb-12">Interagir avec le contrat</h2>
-        
-        <!-- Wallet & Contract Info -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            <!-- Wallet Info -->
-            <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-                <h3 class="text-xl font-semibold mb-4 text-purple-300">Wallet Info</h3>
-                <div id="wallet-details" class="space-y-2">
-                    <p>Connect your wallet to interact with TAAMS</p>
-                </div>
-            </div>
-            
-            <!-- Contract Info -->
-            <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-                <h3 class="text-xl font-semibold mb-4 text-purple-300">Contract Info</h3>
-                <div class="space-y-4">
-                    <div>
-                        <p class="text-sm text-gray-400">Contract Address:</p>
-                        <p class="text-sm break-all">0x087B3298Dc17D5f8982966844869a50095220698</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-400">Network:</p>
-                        <p class="text-sm">Mega Testnet (6342)</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Placeholder for dynamically loaded pages -->
+    <section id="dynamic-content" class="py-20 bg-gray-900 hidden"></section>
+  </main>
 
-        <!-- Token Management -->
-        <div class="mb-12">
-            <h3 class="text-2xl font-semibold mb-6">Gestion des Tokens</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Balance Check -->
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h4 class="text-xl font-semibold mb-4">Solde TAAMS</h4>
-                    <p id="balance" class="text-lg">0 TAAMS</p>
-                    <button id="check-balance" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg mt-4">
-                        Vérifier
-                    </button>
-                </div>
-                
-                <!-- Transfer -->
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h4 class="text-xl font-semibold mb-4">Transférer TAAMS</h4>
-                    <input id="transfer-address" type="text" placeholder="Adresse du destinataire" class="w-full p-2 mb-4 rounded bg-gray-700">
-                    <input id="transfer-amount" type="number" placeholder="Montant" class="w-full p-2 mb-4 rounded bg-gray-700">
-                    <button id="transfer" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
-                        Transférer
-                    </button>
-                </div>
-                
-                <!-- Burn -->
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h4 class="text-xl font-semibold mb-4">Participer au Burn</h4>
-                    <input id="burn-amount" type="number" placeholder="Montant à brûler" class="w-full p-2 mb-4 rounded bg-gray-700">
-                    <button id="participate-burn" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
-                        Brûler
-                    </button>
-                </div>
-                
-                <!-- BL2P Reward -->
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h4 class="text-xl font-semibold mb-4">Réclamer BL2P</h4>
-                    <p id="bl2p-reward" class="text-lg">0 BL2P</p>
-                    <button id="claim-bl2p" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg mt-4">
-                        Réclamer
-                    </button>
-                </div>
-                
-                <!-- Remaining BL2P -->
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h4 class="text-xl font-semibold mb-4">BL2P Restant</h4>
-                    <p id="remaining-bl2p" class="text-lg">0 BL2P</p>
-                    <button id="check-remaining-bl2p" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg mt-4">
-                        Vérifier
-                    </button>
-                </div>
-                
-                <!-- Burn Inactive BL2P -->
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h4 class="text-xl font-semibold mb-4">Brûler BL2P Inactif</h4>
-                    <input id="burn-inactive-address" type="text" placeholder="Adresse de l'utilisateur" class="w-full p-2 mb-4 rounded bg-gray-700">
-                    <button id="burn-inactive-bl2p" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
-                        Brûler
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Staking Section -->
-        <div class="mb-12">
-            <h3 class="text-2xl font-semibold mb-6">Staking</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Stake -->
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h4 class="text-xl font-semibold mb-4">Staker des TAAMS</h4>
-                    <input id="stake-amount" type="number" placeholder="Montant à staker" class="w-full p-2 mb-4 rounded bg-gray-700">
-                    <button id="stake" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
-                        Staker
-                    </button>
-                </div>
-                
-                <!-- BL2P Boost -->
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h4 class="text-xl font-semibold mb-4">Utiliser BL2P pour Boost</h4>
-                    <input id="bl2p-boost-amount" type="number" placeholder="Montant BL2P" class="w-full p-2 mb-4 rounded bg-gray-700">
-                    <button id="use-bl2p-staking" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
-                        Booster
-                    </button>
-                </div>
-                
-                <!-- Unstake -->
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h4 class="text-xl font-semibold mb-4">Unstake</h4>
-                    <button id="unstake" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
-                        Unstake
-                    </button>
-                </div>
-                
-                <!-- Staking Info -->
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h4 class="text-xl font-semibold mb-4">Infos Staking</h4>
-                    <p id="staking-info" class="text-lg">Montant : 0 TAAMS<br>Récompense : 0<br>Boost BL2P : 0</p>
-                    <button id="check-staking-info" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg mt-4">
-                        Vérifier
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Governance Section -->
-        <div class="mb-12">
-            <h3 class="text-2xl font-semibold mb-6">Gouvernance</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Submit Proposal -->
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h4 class="text-xl font-semibold mb-4">Soumettre une Proposition</h4>
-                    <input id="proposal-desc" type="text" placeholder="Description" class="w-full p-2 mb-4 rounded bg-gray-700">
-                    <input id="proposal-value" type="number" placeholder="Nouvelle valeur" class="w-full p-2 mb-4 rounded bg-gray-700">
-                    <input id="proposal-address" type="text" placeholder="Nouvelle adresse (optionnel)" class="w-full p-2 mb-4 rounded bg-gray-700">
-                    <select id="proposal-type" class="w-full p-2 mb-4 rounded bg-gray-700">
-                        <option value="0">BurnAmount</option>
-                        <option value="1">RewardRate</option>
-                        <option value="2">ReplenishRate</option>
-                        <option value="3">EmergencyPause</option>
-                        <option value="4">UnlockReserve</option>
-                        <option value="5">LockedReserve</option>
-                        <option value="6">Advertisement</option>
-                        <option value="7">MaturationPeriod</option>
-                        <option value="8">BL2PLifespan</option>
-                        <option value="9">InactivityBurnRate</option>
-                        <option value="10">Quorum</option>
-                        <option value="11">VoteThreshold</option>
-                        <option value="12">MaxDelegatedBL2PPercent</option>
-                    </select>
-                    <button id="submit-proposal" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
-                        Soumettre
-                    </button>
-                </div>
-                
-                <!-- Vote -->
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h4 class="text-xl font-semibold mb-4">Voter</h4>
-                    <input id="vote-proposal-id" type="number" placeholder="ID de la proposition" class="w-full p-2 mb-4 rounded bg-gray-700">
-                    <div class="flex items-center mb-4">
-                        <input id="vote-support" type="checkbox" class="mr-2">
-                        <label>Soutenir</label>
-                    </div>
-                    <input id="vote-secret" type="text" placeholder="Secret pour le vote" class="w-full p-2 mb-4 rounded bg-gray-700">
-                    <button id="commit-vote" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
-                        Voter (Commit)
-                    </button>
-                    <button id="reveal-vote" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg mt-2">
-                        Révéler
-                    </button>
-                </div>
-                
-                <!-- Delegate Vote -->
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h4 class="text-xl font-semibold mb-4">Déléguer le Vote</h4>
-                    <input id="delegate-address" type="text" placeholder="Adresse du délégué" class="w-full p-2 mb-4 rounded bg-gray-700">
-                    <input id="delegate-amount" type="number" placeholder="Montant BL2P" class="w-full p-2 mb-4 rounded bg-gray-700">
-                    <button id="delegate-vote" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
-                        Déléguer
-                    </button>
-                    <button id="revoke-delegation" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg mt-2">
-                        Révoquer
-                    </button>
-                </div>
-                
-                <!-- Execute Proposal -->
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h4 class="text-xl font-semibold mb-4">Exécuter une Proposition</h4>
-                    <input id="execute-proposal-id" type="number" placeholder="ID de la proposition" class="w-full p-2 mb-4 rounded bg-gray-700">
-                    <button id="execute-proposal" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
-                        Exécuter
-                    </button>
-                </div>
-                
-                <!-- Top Delegates -->
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h4 class="text-xl font-semibold mb-4">Top Délégués</h4>
-                    <p id="top-delegates" class="text-lg">Aucun délégué</p>
-                    <button id="check-top-delegates" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg mt-4">
-                        Vérifier
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Wheel Section -->
-        <div class="mb-12 text-center">
-            <h3 class="text-2xl font-semibold mb-6">Roue de la Fortune</h3>
-            <canvas id="wheel" width="300" height="300" class="mx-auto mb-4"></canvas>
-            <p id="wheel-eligibility" class="text-lg mb-4">Vérifiez votre éligibilité</p>
-            <button id="spin-wheel" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg">
-                Tourner la Roue
-            </button>
-            <p id="wheel-result" class="text-lg mt-4 hidden">Résultat : En attente...</p>
-        </div>
-    </main>
-
-    <!-- Transaction Modal -->
-    <div id="transaction-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-        <div class="bg-gray-800 p-6 rounded-xl max-w-md w-full mx-4">
-            <h3 class="text-xl font-semibold mb-4" id="modal-title">Transaction</h3>
-            <div id="modal-content" class="mb-4">
-                <p>Processing transaction...</p>
-            </div>
-            <button id="close-modal" class="w-full bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg">
-                Close
-            </button>
-        </div>
+  <!-- Footer -->
+  <footer class="bg-gray-900 py-8">
+    <div class="container mx-auto px-6 text-center">
+      <p class="text-gray-300 mb-2">© 2025 TAAMS. Tous droits réservés.</p>
+      <p class="text-gray-300 mb-2">
+        <a href="https://github.com/peregrn-official/taams" target="_blank" class="text-purple-400 hover:text-purple-300">GitHub</a> |
+        <a href="#license" class="text-purple-400 hover:text-purple-300">Licence MIT</a>
+      </p>
+      <p class="text-sm text-gray-500">Avertissement : TAAMS est en développement. Faites vos propres recherches avant de participer.</p>
     </div>
+  </footer>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 p-4 text-center">
-        <p>© 2025 TAAMS. Tous droits réservés.</p>
-    </footer>
+  <!-- JavaScript -->
+  <script>
+    // Web3 Setup
+    let web3;
+    try {
+      web3 = new Web3(window.ethereum || 'https://rpc-mumbai.polygon.technology');
+    } catch (error) {
+      console.error('Erreur lors de l’initialisation de Web3:', error);
+      alert('Impossible de se connecter au réseau Polygon. Vérifiez votre connexion.');
+    }
 
-    <script>
-        // ABI du contrat TAAMS (simplifié pour l'exemple)
-        const contractABI = [
-            // Fonctions de base ERC20
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "account", "type": "address"}
-                ],
-                "name": "balanceOf",
-                "outputs": [
-                    {"internalType": "uint256", "name": "", "type": "uint256"}
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "recipient", "type": "address"},
-                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
-                ],
-                "name": "transfer",
-                "outputs": [
-                    {"internalType": "bool", "name": "", "type": "bool"}
-                ],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            
-            // Fonctions de staking
-            {
-                "inputs": [
-                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
-                ],
-                "name": "stake",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "unstake",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "user", "type": "address"}
-                ],
-                "name": "getStakingInfo",
-                "outputs": [
-                    {"internalType": "uint256", "name": "amount", "type": "uint256"},
-                    {"internalType": "uint256", "name": "startBlock", "type": "uint256"},
-                    {"internalType": "uint256", "name": "potentialReward", "type": "uint256"},
-                    {"internalType": "uint256", "name": "bl2pBoost", "type": "uint256"}
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            
-            // Fonctions BL2P
-            {
-                "inputs": [],
-                "name": "claimBL2PReward",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "user", "type": "address"}
-                ],
-                "name": "getRemainingValidBL2P",
-                "outputs": [
-                    {"internalType": "uint256", "name": "", "type": "uint256"}
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            
-            // Fonctions de burn
-            {
-                "inputs": [
-                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
-                ],
-                "name": "participateInBurn",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "user", "type": "address"}
-                ],
-                "name": "burnInactiveBL2P",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            
-            // Fonctions de gouvernance
-            {
-                "inputs": [
-                    {"internalType": "string", "name": "desc", "type": "string"},
-                    {"internalType": "uint256", "name": "newValue", "type": "uint256"},
-                    {"internalType": "address", "name": "newAddress", "type": "address"},
-                    {"internalType": "enum TAAMS.ProposalType", "name": "proposalType", "type": "uint8"}
-                ],
-                "name": "submitProposal",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "uint256", "name": "id", "type": "uint256"},
-                    {"internalType": "bytes32", "name": "commitHash", "type": "bytes32"}
-                ],
-                "name": "commitVote",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "uint256", "name": "id", "type": "uint256"},
-                    {"internalType": "bool", "name": "support", "type": "bool"},
-                    {"internalType": "bytes32", "name": "secret", "type": "bytes32"}
-                ],
-                "name": "revealVote",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "uint256", "name": "id", "type": "uint256"}
-                ],
-                "name": "executeProposal",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            
-            // Fonctions de roue
-            {
-                "inputs": [],
-                "name": "spinWheel",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "user", "type": "address"}
-                ],
-                "name": "getWheelSpinEligibility",
-                "outputs": [
-                    {"internalType": "bool", "name": "eligible", "type": "bool"},
-                    {"internalType": "uint256", "name": "nextSpinBlock", "type": "uint256"}
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            }
-        ];
+    const contractAddress = '0x...'; // Remplacer par l'adresse du contrat
+    const contractABI = [
+      { "constant": true, "inputs": [], "name": "totalBurned", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [], "name": "BURN_TARGET", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "balanceOf", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "balanceOfBL2P", "outputs": [{ "type": "uint256" }], "type": "function" },
+      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "getStakingInfo", "outputs": [{ "type": "uint256", "name": "amount" }, { "type": "bool", "name": "boostActive" }], "type": "function" },
+      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "getWheelSpinEligibility", "outputs": [{ "type": "bool", "name": "isEligible" }, { "type": "uint256", "name": "nextBlock" }], "type": "function" },
+      { "constant": false, "inputs": [{ "name": "amount", "type": "uint256" }], "name": "stake", "type": "function" },
+      { "constant": false, "inputs": [], "name": "unstake", "type": "function" },
+      { "constant": false, "inputs": [{ "name": "spender", "type": "address" }, { "name": "amount", "type": "uint256" }], "name": "approve", "type": "function" },
+      { "constant": true, "inputs": [{ "name": "owner", "type": "address" }, { "name": "spender", "type": "address" }], "name": "allowance", "outputs": [{ "type": "uint256" }], "type": "function" }
+    ];
+    let contract;
+    try {
+      contract = new web3.eth.Contract(contractABI, contractAddress);
+    } catch (error) {
+      console.error('Erreur lors de l’initialisation du contrat:', error);
+    }
 
-        // Configuration du contrat et du réseau
-        const contractAddress = "0x087B3298Dc17D5f8982966844869a50095220698";
-        const megaTestnet = {
-            chainId: "0x18C6", // 6342 en hexa
-            chainName: "Mega Testnet",
-            nativeCurrency: {
-                name: "MegaETH",
-                symbol: "TAAMS",
-                decimals: 18
-            },
-            rpcUrls: ["https://carrot.megaeth.com/rpc"],
-            blockExplorerUrls: ["https://megaexplorer.xyz"]
-        };
+    // Simulated testResult.json data
+    const testData = {
+      totalTests: 100,
+      successfulTests: 95,
+      failedTests: 5,
+      lastTestDate: "2025-07-16T12:00:00Z"
+    };
 
-        // Variables globales
-        let provider;
-        let signer;
-        let contract;
-        let connectedAddress;
+    // Router
+    const router = {
+      '#/home': () => {
+        document.querySelectorAll('main > section').forEach(section => section.classList.add('hidden'));
+        document.getElementById('home').classList.remove('hidden');
+      },
+      '#/dashboard': () => loadPage('dashboard.html', loadTestResults),
+      '#/burn': () => loadPage('burn.html', loadBurnData),
+      '#/wheel': () => loadPage('wheel.html', checkEligibility),
+      '#/stake': () => loadPage('stake.html', loadStakingInfo),
+      '#/governance': () => loadPage('governance.html', () => {
+        document.getElementById('voteForBtn').onclick = () => alert('Vous avez voté POUR la proposition !');
+        document.getElementById('voteAgainstBtn').onclick = () => alert('Vous avez voté CONTRE la proposition !');
+      }),
+      '#/my-status': () => loadPage('my-status.html', loadUserStatus)
+    };
 
-        // Initialisation quand la page est chargée
-        document.addEventListener('DOMContentLoaded', () => {
-            initWallet();
-            setupEventListeners();
-            checkConnectedWallet();
-            initWheel();
+    function showSection(sectionId) {
+      document.querySelectorAll('main > section').forEach(section => section.classList.add('hidden'));
+      document.getElementById(sectionId).classList.remove('hidden');
+      if (sectionId !== 'dynamic-content') {
+        document.getElementById('dynamic-content').innerHTML = '';
+      }
+    }
+
+    async function loadPage(page, callback) {
+      try {
+        const response = await fetch(`/pages/${page}`);
+        if (!response.ok) throw new Error(`Erreur HTTP ${response.status}`);
+        document.getElementById('dynamic-content').innerHTML = await response.text();
+        showSection('dynamic-content');
+        if (callback) callback();
+      } catch (error) {
+        console.error('Erreur lors du chargement de la page:', error);
+        document.getElementById('dynamic-content').innerHTML = '<p class="text-center text-red-500">Erreur lors du chargement de la page.</p>';
+      }
+    }
+
+    window.onhashchange = () => {
+      const route = window.location.hash || '#/home';
+      router[route] ? router[route]() : showSection('home');
+    };
+
+    // Mobile Menu
+    document.getElementById('mobileMenuBtn').onclick = () => {
+      document.getElementById('mobileMenu').classList.toggle('hidden');
+    };
+
+    // Wallet Connect
+    async function connectWallet() {
+      if (!window.ethereum) {
+        alert('MetaMask n’est pas installé !');
+        return;
+      }
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const address = accounts[0];
+        const balance = await web3.eth.getBalance(address);
+        document.getElementById('walletAddress').textContent = `Connecté : ${address.slice(0, 6)}...${address.slice(-4)} (${web3.utils.fromWei(balance, 'ether')} ETH)`;
+        document.getElementById('connectWallet').textContent = 'Connecté';
+        localStorage.setItem('walletAddress', address);
+
+        const message = "TAAMS - Identification Web3";
+        const signature = await window.ethereum.request({
+          method: 'personal_sign',
+          params: [message, address]
+        });
+        console.log('Signature:', signature);
+      } catch (error) {
+        console.error('Erreur lors de la connexion:', error);
+        alert('Erreur lors de la connexion à MetaMask.');
+      }
+    }
+
+    document.getElementById('connectWallet').onclick = connectWallet;
+
+    if (localStorage.getItem('walletAddress')) {
+      document.getElementById('walletAddress').textContent = `Connecté : ${localStorage.getItem('walletAddress').slice(0, 6)}...${localStorage.getItem('walletAddress').slice(-4)}`;
+      document.getElementById('connectWallet').textContent = 'Connecté';
+    }
+
+    // Test Dashboard
+    async function loadTestResults() {
+      try {
+        const data = testData;
+        document.getElementById('successfulTests').textContent = data.successfulTests;
+        document.getElementById('failedTests').textContent = data.failedTests;
+        document.getElementById('lastTestDate').textContent = new Date(data.lastTestDate).toLocaleDateString('fr-FR');
+        document.getElementById('progressBar').style.width = `${(data.successfulTests / data.totalTests) * 100}%`;
+
+        new Chart(document.getElementById('testChart'), {
+          type: 'bar',
+          data: {
+            labels: ['Tests réussis', 'Tests échoués'],
+            datasets: [{
+              label: 'Résultats des tests',
+              data: [data.successfulTests, data.failedTests],
+              backgroundColor: ['#10B981', '#EF4444'],
+              borderColor: ['#10B981', '#EF4444'],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            scales: { x: { beginAtZero: true, max: data.totalTests, title: { display: true, text: 'Nombre de tests' } } },
+            plugins: { legend: { display: false }, title: { display: true, text: 'Résultats des tests unitaires' } }
+          }
+        });
+      } catch (error) {
+        console.error('Erreur lors du chargement des résultats des tests:', error);
+      }
+    }
+
+    // Burn Module
+    async function loadBurnData() {
+      try {
+        const totalBurned = await contract.methods.totalBurned().call() || '500000000000000000000000';
+        const burnTarget = await contract.methods.BURN_TARGET().call() || '1000000000000000000000000';
+        const remaining = burnTarget - totalBurned;
+
+        document.getElementById('totalBurned').textContent = web3.utils.fromWei(totalBurned, 'ether');
+        document.getElementById('burnTarget').textContent = web3.utils.fromWei(burnTarget, 'ether');
+        document.getElementById('remainingBurn').textContent = web3.utils.fromWei(remaining.toString(), 'ether');
+        document.getElementById('burnProgress').style.width = `${(totalBurned / burnTarget) * 100}%`;
+
+        new Chart(document.getElementById('burnChart'), {
+          type: 'bar',
+          data: {
+            labels: ['TAAMS brûlés', 'TAAMS restants'],
+            datasets: [{
+              label: 'Progression du burn',
+              data: [totalBurned, remaining],
+              backgroundColor: ['#F59E0B', '#6B7280'],
+              borderColor: ['#F59E0B', '#6B7280'],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            scales: { x: { beginAtZero: true, title: { display: true, text: 'Quantité (TAAMS)' } } },
+            plugins: { legend: { display: false }, title: { display: true, text: 'Progression vers l’objectif de burn' } }
+          }
+        });
+      } catch (error) {
+        console.error('Erreur lors du chargement des données de burn:', error);
+      }
+    }
+
+    // Wheel Module
+    const rewards = ['10 TAAMS', '1 NFT', 'Rien', '100 TAAMS', 'Boost APY', 'Essai encore !', '50 TAAMS', '2 NFTs'];
+    async function checkEligibility() {
+      if (!window.ethereum) {
+        document.getElementById('eligibility').textContent = 'MetaMask requis';
+        return;
+      }
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const address = accounts[0];
+        const eligibility = await contract.methods.getWheelSpinEligibility(address).call() || { isEligible: false, nextBlock: '0' };
+        document.getElementById('eligibility').textContent = eligibility.isEligible ? 'Éligible' : 'Non éligible';
+        document.getElementById('nextBlock').textContent = `Prochain bloc : ${eligibility.nextBlock}`;
+        document.getElementById('spinBtn').disabled = !eligibility.isEligible;
+
+        new Chart(document.getElementById('wheelChart'), {
+          type: 'doughnut',
+          data: {
+            labels: rewards,
+            datasets: [{
+              data: Array(rewards.length).fill(1),
+              backgroundColor: ['#7C3AED', '#00B4D8', '#EF4444', '#F59E0B', '#10B981', '#6B7280', '#9CA3AF', '#D1D5DB'],
+              borderWidth: 2
+            }]
+          },
+          options: { plugins: { legend: { display: true, position: 'right' } }, animation: { duration: 0 } }
         });
 
-        // Initialisation du wallet
-        function initWallet() {
-            if (window.ethereum) {
-                provider = new ethers.providers.Web3Provider(window.ethereum);
-                contract = new ethers.Contract(contractAddress, contractABI, provider);
-                
-                // Écoute les changements de compte
-                window.ethereum.on('accountsChanged', (accounts) => {
-                    if (accounts.length > 0) {
-                        connectedAddress = accounts[0];
-                        updateWalletInfo();
-                    } else {
-                        disconnectWallet();
-                    }
-                });
-                
-                // Écoute les changements de réseau
-                window.ethereum.on('chainChanged', (chainId) => {
-                    if (parseInt(chainId) !== 6342) {
-                        alert("Please switch to Mega Testnet");
-                    }
-                });
-            } else {
-                alert("Please install MetaMask or another Web3 wallet");
-            }
-        }
+        document.getElementById('spinBtn').onclick = function() {
+          const spinResult = rewards[Math.floor(Math.random() * rewards.length)];
+          document.getElementById('spinResult').textContent = `Résultat : ${spinResult}`;
+          document.getElementById('wheelChart').classList.add('animate-spin-slow');
+          setTimeout(() => document.getElementById('wheelChart').classList.remove('animate-spin-slow'), 3000);
+          addSpinToHistory(spinResult);
+        };
+      } catch (error) {
+        console.error('Erreur lors de la vérification d’éligibilité:', error);
+        document.getElementById('eligibility').textContent = 'Erreur de connexion';
+      }
+    }
 
-        // Vérifie si un wallet est déjà connecté
-        async function checkConnectedWallet() {
-            if (window.ethereum) {
-                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                if (accounts.length > 0) {
-                    connectedAddress = accounts[0];
-                    signer = provider.getSigner();
-                    contract = new ethers.Contract(contractAddress, contractABI, signer);
-                    updateWalletInfo();
-                }
-            }
-        }
+    // Stake Module
+    async function loadStakingInfo() {
+      if (!window.ethereum) return;
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const address = accounts[0];
+        const stakingInfo = await contract.methods.getStakingInfo(address).call() || { amount: '0', boostActive: false };
+        document.getElementById('stakedAmount').textContent = `${web3.utils.fromWei(stakingInfo.amount, 'ether')} TAAMS`;
+        document.getElementById('boostStatus').textContent = `Boost BL2P : ${stakingInfo.boostActive ? 'Actif' : 'Inactif'}`;
 
-        // Connecte le wallet
-        async function connectWallet() {
-            try {
-                // Vérifie et ajoute le réseau Mega Testnet si nécessaire
-                await window.ethereum.request({
-                    method: 'wallet_addEthereumChain',
-                    params: [megaTestnet]
-                });
-                
-                // Demande la connexion
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                connectedAddress = accounts[0];
-                signer = provider.getSigner();
-                contract = new ethers.Contract(contractAddress, contractABI, signer);
-                
-                updateWalletInfo();
-                showModal("Wallet Connected", `Successfully connected: ${connectedAddress}`);
-            } catch (error) {
-                console.error("Error connecting wallet:", error);
-                showModal("Connection Error", error.message);
+        document.getElementById('stakeBtn').onclick = async function() {
+          const amount = document.getElementById('stakeAmount').value;
+          if (!amount || amount <= 0) {
+            alert('Veuillez entrer un montant valide.');
+            return;
+          }
+          try {
+            const allowance = await contract.methods.allowance(address, contractAddress).call();
+            if (allowance < web3.utils.toWei(amount, 'ether')) {
+              await contract.methods.approve(contractAddress, web3.utils.toWei(amount, 'ether')).send({ from: address });
             }
-        }
+            await contract.methods.stake(web3.utils.toWei(amount, 'ether')).send({ from: address });
+            alert('Staking effectué !');
+            loadStakingInfo();
+          } catch (error) {
+            console.error('Erreur lors du staking:', error);
+            alert('Erreur lors du staking.');
+          }
+        };
 
-        // Déconnecte le wallet
-        function disconnectWallet() {
-            connectedAddress = null;
-            signer = null;
-            document.getElementById('wallet-info').classList.add('hidden');
-            document.getElementById('connect-wallet').classList.remove('hidden');
-            document.getElementById('wallet-details').innerHTML = '<p>Connect your wallet to interact with TAAMS</p>';
-        }
+        document.getElementById('unstakeBtn').onclick = async function() {
+          try {
+            await contract.methods.unstake().send({ from: address });
+            alert('Unstake effectué !');
+            loadStakingInfo();
+          } catch (error) {
+            console.error('Erreur lors de l’unstake:', error);
+            alert('Erreur lors de l’unstake.');
+          }
+        };
+      } catch (error) {
+        console.error('Erreur lors du chargement des infos de staking:', error);
+      }
+    }
 
-        // Met à jour les infos du wallet dans l'UI
-        async function updateWalletInfo() {
-            document.getElementById('wallet-info').classList.remove('hidden');
-            document.getElementById('connect-wallet').classList.add('hidden');
-            
-            const shortAddress = `${connectedAddress.substring(0, 6)}...${connectedAddress.substring(38)}`;
-            document.getElementById('wallet-address').textContent = shortAddress;
-            
-            // Récupère le solde
-            const balance = await provider.getBalance(connectedAddress);
-            const balanceInEth = ethers.utils.formatEther(balance);
-            
-            document.getElementById('wallet-details').innerHTML = `
-                <p><span class="text-gray-400">Address:</span> ${shortAddress}</p>
-                <p><span class="text-gray-400">Balance:</span> ${parseFloat(balanceInEth).toFixed(4)} MegaETH</p>
-            `;
-        }
+    // My Status
+    async function loadUserStatus() {
+      if (!window.ethereum) return;
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const address = accounts[0];
+        const taamsBalance = await contract.methods.balanceOf(address).call() || '0';
+        const bl2pBalance = await contract.methods.balanceOfBL2P(address).call() || '0';
+        document.getElementById('taamsBalance').textContent = `${web3.utils.fromWei(taamsBalance, 'ether')} TAAMS`;
+        document.getElementById('bl2pBalance').textContent = `${web3.utils.fromWei(bl2pBalance, 'ether')} BL2P`;
 
-        // Fonctions pour interagir avec le contrat
-        async function checkBalance() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            try {
-                const balance = await contract.balanceOf(connectedAddress);
-                document.getElementById('balance').textContent = `${ethers.utils.formatEther(balance)} TAAMS`;
-                showModal("Balance", `You have ${ethers.utils.formatEther(balance)} TAAMS tokens`);
-            } catch (error) {
-                showModal("Error", error.message);
-            }
-        }
+        const spinHistory = JSON.parse(localStorage.getItem('spinHistory') || '[]');
+        document.getElementById('spinCount').textContent = spinHistory.length;
+        const spinList = document.getElementById('spinHistory');
+        spinList.innerHTML = '';
+        spinHistory.forEach(spin => {
+          const li = document.createElement('li');
+          li.textContent = `Spin : ${spin.result} le ${new Date(spin.date).toLocaleDateString('fr-FR')}`;
+          spinList.appendChild(li);
+        });
+      } catch (error) {
+        console.error('Erreur lors du chargement du statut:', error);
+      }
+    }
 
-        async function transferTokens() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            const recipient = document.getElementById('transfer-address').value;
-            const amount = document.getElementById('transfer-amount').value;
-            
-            if (!ethers.utils.isAddress(recipient)) {
-                showModal("Error", "Invalid recipient address");
-                return;
-            }
-            
-            if (!amount || isNaN(amount) {
-                showModal("Error", "Invalid amount");
-                return;
-            }
-            
-            try {
-                showModal("Processing", "Please confirm the transaction in your wallet");
-                const tx = await contract.transfer(recipient, ethers.utils.parseEther(amount));
-                await tx.wait();
-                showModal("Success", `Successfully transferred ${amount} TAAMS to ${recipient}`);
-                checkBalance();
-            } catch (error) {
-                showModal("Error", error.message);
-            }
-        }
+    function addSpinToHistory(result) {
+      const spinHistory = JSON.parse(localStorage.getItem('spinHistory') || '[]');
+      spinHistory.push({ result, date: new Date().toISOString() });
+      localStorage.setItem('spinHistory', JSON.stringify(spinHistory));
+      loadUserStatus();
+    }
 
-        async function stakeTokens() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            const amount = document.getElementById('stake-amount').value;
-            
-            if (!amount || isNaN(amount)) {
-                showModal("Error", "Invalid amount");
-                return;
-            }
-            
-            try {
-                showModal("Processing", "Please confirm the transaction in your wallet");
-                const tx = await contract.stake(ethers.utils.parseEther(amount));
-                await tx.wait();
-                showModal("Success", `Successfully staked ${amount} TAAMS tokens`);
-                checkBalance();
-            } catch (error) {
-                showModal("Error", error.message);
-            }
-        }
-
-        async function unstakeTokens() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            try {
-                showModal("Processing", "Please confirm the transaction in your wallet");
-                const tx = await contract.unstake();
-                await tx.wait();
-                showModal("Success", "Successfully unstaked your tokens");
-                checkBalance();
-            } catch (error) {
-                showModal("Error", error.message);
-            }
-        }
-
-        async function claimBL2PReward() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            try {
-                showModal("Processing", "Please confirm the transaction in your wallet");
-                const tx = await contract.claimBL2PReward();
-                await tx.wait();
-                showModal("Success", "BL2P rewards claimed successfully!");
-                checkBalance();
-            } catch (error) {
-                showModal("Error", error.message);
-            }
-        }
-
-        async function checkRemainingBL2P() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            try {
-                const remaining = await contract.getRemainingValidBL2P(connectedAddress);
-                document.getElementById('remaining-bl2p').textContent = `${ethers.utils.formatEther(remaining)} BL2P`;
-                showModal("Remaining BL2P", `You have ${ethers.utils.formatEther(remaining)} BL2P remaining`);
-            } catch (error) {
-                showModal("Error", error.message);
-            }
-        }
-
-        async function participateInBurn() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            const amount = document.getElementById('burn-amount').value;
-            
-            if (!amount || isNaN(amount)) {
-                showModal("Error", "Invalid amount");
-                return;
-            }
-            
-            try {
-                showModal("Processing", "Please confirm the transaction in your wallet");
-                const tx = await contract.participateInBurn(ethers.utils.parseEther(amount));
-                await tx.wait();
-                showModal("Success", `Successfully burned ${amount} TAAMS tokens`);
-                checkBalance();
-            } catch (error) {
-                showModal("Error", error.message);
-            }
-        }
-
-        async function burnInactiveBL2P() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            const address = document.getElementById('burn-inactive-address').value;
-            
-            if (!ethers.utils.isAddress(address)) {
-                showModal("Error", "Invalid address");
-                return;
-            }
-            
-            try {
-                showModal("Processing", "Please confirm the transaction in your wallet");
-                const tx = await contract.burnInactiveBL2P(address);
-                await tx.wait();
-                showModal("Success", `Successfully burned inactive BL2P for ${address}`);
-            } catch (error) {
-                showModal("Error", error.message);
-            }
-        }
-
-        async function checkStakingInfo() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            try {
-                const info = await contract.getStakingInfo(connectedAddress);
-                document.getElementById('staking-info').innerHTML = `
-                    Montant : ${ethers.utils.formatEther(info.amount)} TAAMS<br>
-                    Récompense : ${ethers.utils.formatEther(info.potentialReward)} TAAMS<br>
-                    Boost BL2P : ${ethers.utils.formatEther(info.bl2pBoost)} BL2P
-                `;
-                showModal("Staking Info", `Staked: ${ethers.utils.formatEther(info.amount)} TAAMS<br>
-                    Potential Reward: ${ethers.utils.formatEther(info.potentialReward)} TAAMS<br>
-                    BL2P Boost: ${ethers.utils.formatEther(info.bl2pBoost)} BL2P`);
-            } catch (error) {
-                showModal("Error", error.message);
-            }
-        }
-
-        async function useBL2PForStaking() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            const amount = document.getElementById('bl2p-boost-amount').value;
-            
-            if (!amount || isNaN(amount)) {
-                showModal("Error", "Invalid amount");
-                return;
-            }
-            
-            try {
-                showModal("Processing", "Please confirm the transaction in your wallet");
-                const tx = await contract.useBL2PForStaking(ethers.utils.parseEther(amount));
-                await tx.wait();
-                showModal("Success", `Successfully used ${amount} BL2P for staking boost`);
-                checkBalance();
-            } catch (error) {
-                showModal("Error", error.message);
-            }
-        }
-
-        async function submitProposal() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            const desc = document.getElementById('proposal-desc').value;
-            const type = document.getElementById('proposal-type').value;
-            const value = document.getElementById('proposal-value').value;
-            const address = document.getElementById('proposal-address').value || ethers.constants.AddressZero;
-            
-            if (!desc || !value) {
-                showModal("Error", "Description and value are required");
-                return;
-            }
-            
-            try {
-                showModal("Processing", "Please confirm the transaction in your wallet");
-                const tx = await contract.submitProposal(desc, type, value, address);
-                await tx.wait();
-                showModal("Success", "Proposal submitted successfully!");
-            } catch (error) {
-                showModal("Error", error.message);
-            }
-        }
-
-        async function commitVote() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            const proposalId = document.getElementById('vote-proposal-id').value;
-            const support = document.getElementById('vote-support').checked;
-            const secret = document.getElementById('vote-secret').value;
-            
-            if (!proposalId || !secret) {
-                showModal("Error", "Proposal ID and secret are required");
-                return;
-            }
-            
-            try {
-                showModal("Processing", "Please confirm the transaction in your wallet");
-                const voteHash = ethers.utils.keccak256(
-                    ethers.utils.defaultAbiCoder.encode(
-                        ['uint256', 'bool', 'bytes32'],
-                        [proposalId, support, ethers.utils.formatBytes32String(secret)]
-                    )
-                );
-                const tx = await contract.commitVote(proposalId, voteHash);
-                await tx.wait();
-                showModal("Success", "Vote committed successfully!");
-            } catch (error) {
-                showModal("Error", error.message);
-            }
-        }
-
-        async function revealVote() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            const proposalId = document.getElementById('vote-proposal-id').value;
-            const support = document.getElementById('vote-support').checked;
-            const secret = document.getElementById('vote-secret').value;
-            
-            if (!proposalId || !secret) {
-                showModal("Error", "Proposal ID and secret are required");
-                return;
-            }
-            
-            try {
-                showModal("Processing", "Please confirm the transaction in your wallet");
-                const tx = await contract.revealVote(proposalId, support, ethers.utils.formatBytes32String(secret));
-                await tx.wait();
-                showModal("Success", "Vote revealed successfully!");
-            } catch (error) {
-                showModal("Error", error.message);
-            }
-        }
-
-        async function delegateVote() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            const delegate = document.getElementById('delegate-address').value;
-            const amount = document.getElementById('delegate-amount').value;
-            
-            if (!ethers.utils.isAddress(delegate)) {
-                showModal("Error", "Invalid delegate address");
-                return;
-            }
-            
-            if (!amount || isNaN(amount)) {
-                showModal("Error", "Invalid amount");
-                return;
-            }
-            
-            try {
-                showModal("Processing", "Please confirm the transaction in your wallet");
-                const tx = await contract.delegateVote(delegate, ethers.utils.parseEther(amount));
-                await tx.wait();
-                showModal("Success", `Successfully delegated ${amount} BL2P voting power to ${delegate}`);
-            } catch (error) {
-                showModal("Error", error.message);
-            }
-        }
-
-        async function revokeDelegation() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            try {
-                showModal("Processing", "Please confirm the transaction in your wallet");
-                const tx = await contract.revokeDelegation();
-                await tx.wait();
-                showModal("Success", "Delegation revoked successfully!");
-            } catch (error) {
-                showModal("Error", error.message);
-            }
-        }
-
-        async function checkTopDelegates() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            try {
-                const delegates = await contract.getTopDelegates();
-                document.getElementById('top-delegates').textContent = delegates.join(', ') || "No delegates";
-                showModal("Top Delegates", delegates.length ? delegates.join(', ') : "No delegates found");
-            } catch (error) {
-                showModal("Error", error.message);
-            }
-        }
-
-        async function executeProposal() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            const proposalId = document.getElementById('execute-proposal-id').value;
-            
-            if (!proposalId) {
-                showModal("Error", "Proposal ID is required");
-                return;
-            }
-            
-            try {
-                showModal("Processing", "Please confirm the transaction in your wallet");
-                const tx = await contract.executeProposal(proposalId);
-                await tx.wait();
-                showModal("Success", "Proposal executed successfully!");
-            } catch (error) {
-                showModal("Error", error.message);
-            }
-        }
-
-        // Roue de la fortune
-        let wheelSpinning = false;
-        const wheelSegments = ['100 TAAMS', '50 BL2P', 'Boost x2', 'Rien', '10 TAAMS', '100 BL2P'];
-        
-        function initWheel() {
-            const canvas = document.getElementById('wheel');
-            const ctx = canvas.getContext('2d');
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = canvas.width / 2 - 10;
-            const arc = 2 * Math.PI / wheelSegments.length;
-            
-            // Dessin de la roue
-            wheelSegments.forEach((segment, i) => {
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius, i * arc, (i + 1) * arc);
-                ctx.lineTo(centerX, centerY);
-                ctx.fillStyle = i % 2 ? '#4a90e2' : '#9b59b6';
-                ctx.fill();
-                ctx.save();
-                ctx.translate(centerX, centerY);
-                ctx.rotate(i * arc + arc / 2);
-                ctx.fillStyle = 'white';
-                ctx.font = '16px Inter';
-                ctx.fillText(segment, radius / 2, 0);
-                ctx.restore();
-            });
-            
-            // Dessin du pointeur
-            ctx.beginPath();
-            ctx.moveTo(centerX, 10);
-            ctx.lineTo(centerX - 10, 30);
-            ctx.lineTo(centerX + 10, 30);
-            ctx.fillStyle = 'red';
-            ctx.fill();
-        }
-
-        async function spinWheel() {
-            if (!connectedAddress) {
-                showModal("Error", "Please connect your wallet first");
-                return;
-            }
-            
-            if (wheelSpinning) return;
-            
-            try {
-                // Vérifier l'éligibilité
-                const eligibility = await contract.getWheelSpinEligibility(connectedAddress);
-                document.getElementById('wheel-eligibility').textContent = eligibility.eligible 
-                    ? "Vous êtes éligible !" 
-                    : `Prochain tour au bloc ${eligibility.nextSpinBlock}`;
-                
-                if (!eligibility.eligible) {
-                    showModal("Not Eligible", "You are not eligible to spin the wheel yet");
-                    return;
-                }
-                
-                wheelSpinning = true;
-                document.getElementById('spin-wheel').disabled = true;
-                
-                // Lancer la transaction
-                showModal("Processing", "Please confirm the transaction in your wallet");
-                const tx = await contract.spinWheel();
-                await tx.wait();
-                
-                // Animation de la roue
-                const canvas = document.getElementById('wheel');
-                const ctx = canvas.getContext('2d');
-                let angle = 0;
-                const spins = Math.floor(Math.random() * 3600) + 720; // 2-10 tours
-                let current = 0;
-                
-                const spinInterval = setInterval(() => {
-                    angle += 0.1;
-                    
-                    // Effacer et redessiner la roue
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    const centerX = canvas.width / 2;
-                    const centerY = canvas.height / 2;
-                    const radius = canvas.width / 2 - 10;
-                    const arc = 2 * Math.PI / wheelSegments.length;
-                    
-                    wheelSegments.forEach((segment, i) => {
-                        ctx.beginPath();
-                        ctx.arc(centerX, centerY, radius, angle + i * arc, angle + (i + 1) * arc);
-                        ctx.lineTo(centerX, centerY);
-                        ctx.fillStyle = i % 2 ? '#4a90e2' : '#9b59b6';
-                        ctx.fill();
-                        ctx.save();
-                        ctx.translate(centerX, centerY);
-                        ctx.rotate(angle + i * arc + arc / 2);
-                        ctx.fillStyle = 'white';
-                        ctx.font = '16px Inter';
-                        ctx.fillText(segment, radius / 2, 0);
-                        ctx.restore();
-                    });
-                    
-                    // Dessin du pointeur
-                    ctx.beginPath();
-                    ctx.moveTo(centerX, 10);
-                    ctx.lineTo(centerX - 10, 30);
-                    ctx.lineTo(centerX + 10, 30);
-                    ctx.fillStyle = 'red';
-                    ctx.fill();
-                    
-                    current += 0.1;
-                    if (current >= spins) {
-                        clearInterval(spinInterval);
-                        wheelSpinning = false;
-                        document.getElementById('spin-wheel').disabled = false;
-                        
-                        // Afficher le résultat
-                        const segmentIndex = Math.floor((angle % (2 * Math.PI)) / (2 * Math.PI / wheelSegments.length));
-                        const result = wheelSegments[segmentIndex];
-                        document.getElementById('wheel-result').textContent = `Résultat : ${result}`;
-                        document.getElementById('wheel-result').classList.remove('hidden');
-                        showModal("Wheel Result", `You won: ${result}`);
-                        
-                        // Mettre à jour le solde
-                        checkBalance();
-                    }
-                }, 16);
-                
-            } catch (error) {
-                wheelSpinning = false;
-                document.getElementById('spin-wheel').disabled = false;
-                showModal("Error", error.message);
-            }
-        }
-
-        // Affiche une modal
-        function showModal(title, content) {
-            document.getElementById('modal-title').textContent = title;
-            document.getElementById('modal-content').innerHTML = `<p>${content}</p>`;
-            document.getElementById('transaction-modal').classList.remove('hidden');
-        }
-
-        // Configure les écouteurs d'événements
-        function setupEventListeners() {
-            // Wallet
-            document.getElementById('connect-wallet').addEventListener('click', connectWallet);
-            document.getElementById('close-modal').addEventListener('click', () => {
-                document.getElementById('transaction-modal').classList.add('hidden');
-            });
-            
-            // Tokens
-            document.getElementById('check-balance').addEventListener('click', checkBalance);
-            document.getElementById('transfer').addEventListener('click', transferTokens);
-            document.getElementById('participate-burn').addEventListener('click', participateInBurn);
-            document.getElementById('claim-bl2p').addEventListener('click', claimBL2PReward);
-            document.getElementById('check-remaining-bl2p').addEventListener('click', checkRemainingBL2P);
-            document.getElementById('burn-inactive-bl2p').addEventListener('click', burnInactiveBL2P);
-            
-            // Staking
-            document.getElementById('stake').addEventListener('click', stakeTokens);
-            document.getElementById('unstake').addEventListener('click', unstakeTokens);
-            document.getElementById('check-staking-info').addEventListener('click', checkStakingInfo);
-            document.getElementById('use-bl2p-staking').addEventListener('click', useBL2PForStaking);
-            
-            // Governance
-            document.getElementById('submit-proposal').addEventListener('click', submitProposal);
-            document.getElementById('commit-vote').addEventListener('click', commitVote);
-            document.getElementById('reveal-vote').addEventListener('click', revealVote);
-            document.getElementById('delegate-vote').addEventListener('click', delegateVote);
-            document.getElementById('revoke-delegation').addEventListener('click', revokeDelegation);
-            document.getElementById('check-top-delegates').addEventListener('click', checkTopDelegates);
-            document.getElementById('execute-proposal').addEventListener('click', executeProposal);
-            
-            // Wheel
-            document.getElementById('spin-wheel').addEventListener('click', spinWheel);
-            
-            // Navigation
-            document.getElementById('scroll-to-interact').addEventListener('click', () => {
-                document.getElementById('interact').scrollIntoView({ behavior: 'smooth' });
-            });
-        }
-    </script>
+    // Initial Load
+    window.onload = () => {
+      const route = window.location.hash || '#/home';
+      router[route] ? router[route]() : showSection('home');
+    };
+  </script>
 </body>
 </html>

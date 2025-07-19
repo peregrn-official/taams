@@ -1,0 +1,214 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TAAMS - Roue intergalactique BL2P</title>
+  <meta name="description" content="Tentez votre chance avec la roue de récompenses BL2P de TAAMS.">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .fade-in { animation: fadeIn 1s ease-in; }
+    .animate-spin-slow { animation: spin 3s linear; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body class="bg-gray-900 text-white">
+  <!-- Header -->
+  <header class="bg-gray-800 shadow fixed w-full top-0 z-10">
+    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center">
+        <img src="https://raw.githubusercontent.com/peregrn-official/taams/main/assets/logo.jpg" alt="Logo TAAMS" class="h-12 mr-3">
+        <span class="text-2xl font-bold text-purple-400">TAAMS</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <div id="mobileMenu" class="hidden md:flex space-x-6">
+          <a href="#/home" class="text-gray-300 hover:text-purple-400">Accueil</a>
+          <a href="#/dashboard" class="text-gray-300 hover:text-purple-400">Tableau de bord</a>
+          <a href="#/burn" class="text-gray-300 hover:text-purple-400">Burn</a>
+          <a href="#/wheel" class="text-gray-300 hover:text-purple-400">Roue</a>
+          <a href="#/stake" class="text-gray-300 hover:text-purple-400">Staking</a>
+          <a href="#/governance" class="text-gray-300 hover:text-purple-400">Gouvernance</a>
+          <a href="#/my-status" class="text-gray-300 hover:text-purple-400">Mon statut</a>
+>
+        </div>
+        <p id="walletAddress" class="text-gray-300"></p>
+        <button id="connectWallet" class="bg-purple-500 text-white px-4 py-2 rounded-full">Connexion MetaMask</button>
+        <button id="mobileMenuBtn" class="md:hidden text-gray-300">☰</button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main class="pt-24">
+    <section id="wheel" class="py-20 bg-gray-900">
+      <div class="container mx-auto px-6">
+        <h2 class="text-4xl font-bold text-center mb-10 text-purple-400 fade-in">Roue intergalactique BL2P</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
+            <h3 class="text-xl font-semibold text-purple-400 mb-2">Éligibilité</h3>
+            <p id="eligibility" class="text-lg">Vérification en cours...</p>
+            <p id="nextBlock" class="text-lg mt-2">Prochain bloc : N/A</p>
+          </div>
+          <div class="text-center">
+            <canvas id="wheelChart" class="w-64 h-64 mx-auto"></canvas>
+            <button id="spinBtn" class="mt-4 bg-purple-500 text-white px-6 py-2 rounded-full" disabled>Tourner la roue</button>
+            <p id="spinResult" class="text-lg mt-4"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 py-8">
+    <div class="container mx-auto px-6 text-center">
+      <p class="text-gray-300 mb-2">© 2025 TAAMS. Tous droits réservés.</p>
+      <p class="text-gray-300 mb-2">
+        <a href="https://github.com/peregrn-official/taams" target="_blank" class="text-purple-400 hover:text-purple-300">GitHub</a> |
+        <a href="#license" class="text-purple-400 hover:text-purple-300">Licence MIT</a>
+      </p>
+      <p class="text-sm text-gray-500">Avertissement : TAAMS est en développement. Faites vos propres recherches avant de participer.</p>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    const web3 = new Web3(window.ethereum || 'https://rpc-mumbai.polygon.technology');
+    const contractAddress = '0x...'; // Remplacer par l'adresse du contrat
+    const contractABI = [
+      { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "getWheelSpinEligibility", "outputs": [{ "type": "bool", "name": "isEligible" }, { "type": "uint256", "name": "nextBlock" }], "type": "function" }
+    ];
+    const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+    const rewards = ['10 TAAMS', '1 NFT', 'Rien', '100 TAAMS', 'Boost APY', 'Essai encore !', '50 TAAMS', '2 NFTs'];
+
+    // Mobile Menu
+    document.getElementById('mobileMenuBtn').onclick = () => {
+      document.getElementById('mobileMenu').classList.toggle('hidden');
+    };
+
+    // Wallet Connect
+    async function connectWallet() {
+      if (window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          const address = accounts[0];
+          const balance = await web3.eth.getBalance(address);
+          document.getElementById('walletAddress').textContent = `Connecté : ${address.slice(0, 6)}...${address.slice(-4)} (${web3.utils.fromWei(balance, 'ether')} ETH)`;
+          document.getElementById('connectWallet').textContent = 'Connecté';
+          localStorage.setItem('walletAddress', address);
+
+          const message = "TAAMS - Identification Web3";
+          const signature = await window.ethereum.request({
+            method: 'personal_sign',
+            params: [message, address]
+          });
+          console.log('Signature:', signature);
+        } catch (error) {
+          console.error('Erreur lors de la connexion:', error);
+          alert('Erreur lors de la connexion à MetaMask.');
+        }
+      } else {
+        alert('MetaMask n’est pas installé !');
+      }
+    }
+
+    document.getElementById('connectWallet').onclick = connectWallet;
+
+    if (localStorage.getItem('walletAddress')) {
+      document.getElementById('walletAddress').textContent = `Connecté : ${localStorage.getItem('walletAddress').slice(0, 6)}...${localStorage.getItem('walletAddress').slice(-4)}`;
+      document.getElementById('connectWallet').textContent = 'Connecté';
+    }
+
+    // Check Eligibility
+    async function checkEligibility() {
+      if (window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          const address = accounts[0];
+          const eligibility = await contract.methods.getWheelSpinEligibility(address).call() || { isEligible: false, nextBlock: '0' };
+          const nextBlock = eligibility.nextBlock;
+          document.getElementById('eligibility').textContent = eligibility.isEligible ? 'Éligible' : 'Non éligible';
+          document.getElementById('nextBlock').textContent = `Prochain bloc : ${nextBlock}`;
+          document.getElementById('spinBtn').disabled = !eligibility.isEligible;
+
+          new Chart(document.getElementById('wheelChart'), {
+            type: 'doughnut',
+            data: {
+              labels: rewards,
+              datasets: [{
+                data: Array(rewards.length).fill(1),
+                backgroundColor: ['#7C3AED', '#00B4D8', '#EF4444', '#F59E0B', '#10B981', '#6B7280', '#9CA3AF', '#D1D5DB'],
+                borderWidth: 2
+              }]
+            },
+            options: { plugins: { legend: { display: true, position: 'right' } }, animation: { duration: 0 } }
+          });
+        } catch (error) {
+          console.error('Erreur lors de la vérification d’éligibilité:', error);
+        }
+      }
+    }
+
+    document.getElementById('spinBtn').onclick = function() {
+      const spinResult = rewards[Math.floor(Math.random() * rewards.length)];
+      document.getElementById('spinResult').textContent = `Résultat : ${spinResult}`;
+      document.getElementById('wheelChart').classList.add('animate-spin-slow');
+      setTimeout(() => document.getElementById('wheelChart').classList.remove('animate-spin-slow'), 3000);
+      addSpinToHistory(spinResult);
+    };
+
+    function addSpinToHistory(result) {
+      const spinHistory = JSON.parse(localStorage.getItem('spinHistory') || '[]');
+      spinHistory.push({ result, date: new Date().toISOString() });
+      localStorage.setItem('spinHistory', JSON.stringify(spinHistory));
+    }
+
+    window.onload = checkEligibility;
+  </script>
+</body>
+</html>
