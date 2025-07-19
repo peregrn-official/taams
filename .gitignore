@@ -3,7 +3,8 @@
 
 # ⚙️ Hardhat & backend
 hardhat.config.js
-
+st/
+src/
 scripts/
 artifacts/
 cache/
