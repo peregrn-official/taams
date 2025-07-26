@@ -1212,66 +1212,70 @@
             }
         }
 
-        // Stake tokens function
-        async function stakeTokens() {
-            const amount = document.getElementById('stakeAmount').value;
-            const stakeBtn = document.getElementById('stakeBtn');
+        // Initialisation du contrat de staking (à placer en haut du script)
+const stakingAbi = [/* place ici l'ABI de TAAMSStaking */];
+const stakingContractAddress = '0xADRESSE_DE_TON_CONTRAT_STAKING'; // Remplace avec l'adresse réelle
+const stakingContract = new ethers.Contract(stakingContractAddress, stakingAbi, signer);
 
-            if (!amount || amount < 1000) {
-                showToast('Minimum stake is 1,000 TAAMS', 'error');
-                return;
-            }
+// Fonction pour staker des TAAMS
+async function stakeTokens() {
+    const amount = document.getElementById('stakeAmount').value;
+    const stakeBtn = document.getElementById('stakeBtn');
 
-            try {
-                showLoading(stakeBtn, true);
-                
-                const amountWei = ethers.parseEther(amount.toString());
-                
-                // Check allowance
-                const allowance = await contract.allowance(userAddress, CONTRACT_ADDRESS);
-                if (allowance < amountWei) {
-                    showToast('Approving tokens...', 'warning');
-                    const approveTx = await contract.approve(CONTRACT_ADDRESS, amountWei);
-                    await approveTx.wait();
-                }
+    if (!amount || parseFloat(amount) < 1000) {
+        showToast('Minimum stake is 1,000 TAAMS', 'error');
+        return;
+    }
 
-                showToast('Staking tokens...', 'warning');
-                const tx = await contract.stake(amountWei);
-                await tx.wait();
+    try {
+        showLoading(stakeBtn, true);
+        const amountWei = ethers.parseEther(amount.toString());
 
-                showToast(`Successfully staked ${amount} TAAMS! 💎`, 'success');
-                await loadUserData();
-                document.getElementById('stakeAmount').value = '';
-                
-            } catch (error) {
-                console.error('Stake error:', error);
-                showToast(`Stake failed: ${error.reason || error.message}`, 'error');
-            } finally {
-                showLoading(stakeBtn, false);
-            }
+        // Vérifie l'approbation sur le contrat TAAMS
+        const allowance = await contract.allowance(userAddress, stakingContractAddress);
+        if (allowance < amountWei) {
+            showToast('Approving tokens...', 'warning');
+            const approveTx = await contract.approve(stakingContractAddress, amountWei);
+            await approveTx.wait();
         }
 
-        // Unstake tokens function
-        async function unstakeTokens() {
-            const unstakeBtn = document.getElementById('unstakeBtn');
+        showToast('Staking tokens...', 'warning');
+        const tx = await stakingContract.stake(amountWei);
+        await tx.wait();
 
-            try {
-                showLoading(unstakeBtn, true);
-                
-                showToast('Unstaking tokens...', 'warning');
-                const tx = await contract.unstake();
-                await tx.wait();
+        showToast(`Successfully staked ${amount} TAAMS! 💎`, 'success');
+        await loadUserData();
+        document.getElementById('stakeAmount').value = '';
 
-                showToast('Successfully unstaked tokens! 📤', 'success');
-                await loadUserData();
-                
-            } catch (error) {
-                console.error('Unstake error:', error);
-                showToast(`Unstake failed: ${error.reason || error.message}`, 'error');
-            } finally {
-                showLoading(unstakeBtn, false);
-            }
-        }
+    } catch (error) {
+        console.error('Stake error:', error);
+        showToast(`Stake failed: ${error.reason || error.message}`, 'error');
+    } finally {
+        showLoading(stakeBtn, false);
+    }
+}
+
+// Fonction pour unstaker des TAAMS
+async function unstakeTokens() {
+    const unstakeBtn = document.getElementById('unstakeBtn');
+
+    try {
+        showLoading(unstakeBtn, true);
+
+        showToast('Unstaking tokens...', 'warning');
+        const tx = await stakingContract.unstake();
+        await tx.wait();
+
+        showToast('Successfully unstaked tokens! 📤', 'success');
+        await loadUserData();
+
+    } catch (error) {
+        console.error('Unstake error:', error);
+        showToast(`Unstake failed: ${error.reason || error.message}`, 'error');
+    } finally {
+        showLoading(unstakeBtn, false);
+    }
+}
 
         // Submit proposal function
         async function submitProposal() {
